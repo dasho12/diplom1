@@ -2,8 +2,9 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth';
 import CVUpload from '@/components/CVUpload';
-import Chatbot from '@/components/Chatbot';
-import Navigation from '@/components/Navigation';
+import Chat from '@/components/Chat';
+import Navigation from '@/components/Navigation'; 
+
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -26,10 +27,12 @@ export default async function Home() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
+            <h2 className="text-xl font-semibold mb-4">Upload Your CV</h2>
             <CVUpload />
           </div>
           <div>
-            <Chatbot />
+            <h2 className="text-xl font-semibold mb-4">Chat with CV Assistant</h2>
+            <Chat />
           </div>
         </div>
       </main>

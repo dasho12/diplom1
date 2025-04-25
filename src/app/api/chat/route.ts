@@ -27,8 +27,18 @@ export async function POST(req: Request) {
     });
 
     const cvContent = cvs[0]?.content || 'No CV uploaded yet';
+    console.log('CV Content:', cvContent);
 
     try {
+      console.log('Sending request to OpenRouter...');
+      
+      if (!process.env.OPENROUTER_API_KEY) {
+        console.error('OpenRouter API key is missing');
+        return NextResponse.json({
+          response: 'Системийн алдаа гарлаа. Админтай холбоо барина уу.'
+        });
+      }
+
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -38,39 +48,69 @@ export async function POST(req: Request) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "deepseek/deepseek-v3-base:free",
-          "max_tokens": 500,
+          "model": "mistralai/mistral-7b-instruct:free",
+          "max_tokens": 2000,
           "temperature": 0.7,
           "messages": [
             {
               role: 'system',
-              content: `You are a friendly and helpful CV assistant. You can communicate in both English and Mongolian.
-              When users write in Mongolian, respond in Mongolian. When they write in English, respond in English.
+              content: `You are a CV analyzer. Analyze the following CV content and provide feedback in Mongolian language.
 
-              Here is the user's CV content: ${cvContent}
+CV Content: ${cvContent}
 
-              Your personality:
-              - Be friendly and conversational
-              - Use a warm, encouraging tone
-              - Show empathy and understanding
-              - Be patient and helpful
-              - Use simple, clear language
+First, extract and structure the following information from the CV:
 
-              Your approach:
-              1. First, understand the user's needs
-              2. Then, provide personalized advice
-              3. Use examples and scenarios
-              4. Give step-by-step guidance
-              5. Encourage and motivate
+1. Хувийн Мэдээлэл (Personal Information):
+   - Нэр, нас, хүйс
+   - Холбоо барих мэдээлэл
+   - Хаяг, байршил
 
-              Remember:
-              - Be supportive and positive
-              - Focus on solutions, not problems
-              - Celebrate their achievements
-              - Suggest improvements gently
-              - Always end with encouragement
+2. Боловсрол (Education):
+   - Сургуулиуд
+   - Мэргэжлүүд
+   - Он сар
+   - Гол хичээлүүд
+   - Дүн, шагнал
 
-              Keep your responses friendly and helpful, like a trusted friend giving career advice.`
+3. Ажлын Туршлага (Work Experience):
+   - Компаниуд
+   - Албан тушаал
+   - Он сар
+   - Гол үүрэг, хариуцлага
+   - Дараах ажлууд
+
+4. Ур чадвар (Skills):
+   - Техникийн ур чадвар
+   - Хувь хөгжлийн ур чадвар
+   - Хэлний мэдлэг
+   - Сертификатууд
+
+5. Төсөл, Дараах Ажлууд (Projects & Achievements):
+   - Төслүүд
+   - Дараах ажлууд
+   - Шагнал, урамшуулал
+
+Then, provide your analysis in this format:
+
+1. CV Шинжилгээ:
+   - Хүч талууд:
+     * Тодорхой бичнэ үү
+     * Жишээгээр дэмжнэ үү
+   - Сул талууд:
+     * Тодорхой бичнэ үү
+     * Жишээгээр дэмжнэ үү
+
+2. Сайжруулах Зөвлөмж:
+   - Хэсэг бүрт тодорхой зөвлөмж
+   - Яагаад энэ нь чухал вэ
+   - Хэрэгжүүлэх арга замууд
+
+3. Жишээ Хувилбарууд:
+   - Хэсэг бүрт жишээ өгнө үү
+   - Яагаад эдгээр нь сайн вэ
+   - Хэрэгжүүлэх боломжтой байх ёстой
+
+Хариултаа тодорхой, ойлгомжтой байлгана уу.`
             },
             {
               role: 'user',
@@ -80,41 +120,61 @@ export async function POST(req: Request) {
         })
       });
 
+      console.log('OpenRouter response status:', response.status);
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to get response from OpenRouter');
+        console.error('OpenRouter API error:', responseText);
+        let errorMessage = 'Системийн алдаа гарлаа. Дараа дахин оролдоно уу.';
+        
+        try {
+          const errorData = JSON.parse(responseText);
+          if (errorData.error?.code === 429) {
+            errorMessage = `Уучлаарай, одоогоор системийн хязгаарлалттай байна. Дараах зүйлсийг хийж болно:
+
+1. Хэдэн минут хүлээгээд дахин оролдоно уу
+2. Чат функцээр CV-гээ дэлгэрэнгүй шинжилгээ хийх боломжтой
+3. CV-гээ засварлаад дахин илгээх
+
+Одоогийн байдлаар CV-г амжилттай хадгалж авлаа. Дараа дахин оролдох үед дэлгэрэнгүй шинжилгээ хийх боломжтой.`;
+          }
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+        }
+        
+        return NextResponse.json({
+          response: errorMessage
+        });
       }
 
-      const responseText = await response.text();
-      console.log('OpenRouter response:', responseText); // Log the response for debugging
-      
       let data;
       try {
         data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Error parsing response:', parseError);
-        throw new Error('Failed to parse OpenRouter response');
+      } catch (e) {
+        console.error('Failed to parse response:', e);
+        return NextResponse.json({
+          response: 'Системийн алдаа гарлаа. Дараа дахин оролдоно уу.'
+        });
       }
 
-      // More detailed response structure checking
-      if (!data) {
-        throw new Error('Empty response from OpenRouter');
-      }
+      console.log('Parsed response data:', data);
 
-      if (!data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-        console.error('No choices in response:', data);
-        throw new Error('No choices in OpenRouter response');
-      }
-
-      if (!data.choices[0].message) {
-        console.error('No message in first choice:', data.choices[0]);
-        throw new Error('No message in OpenRouter response');
+      if (!data?.choices?.[0]?.message?.content) {
+        console.error('Invalid response structure:', data);
+        return NextResponse.json({
+          response: 'Системийн алдаа гарлаа. Дараа дахин оролдоно уу.'
+        });
       }
 
       const content = data.choices[0].message.content;
-      if (!content || typeof content !== 'string') {
-        console.error('Invalid content in response:', content);
-        throw new Error('Invalid content in OpenRouter response');
+      console.log('Generated content:', content);
+
+      if (!content || content.trim().length === 0) {
+        console.error('Empty content received');
+        return NextResponse.json({
+          response: 'Системийн алдаа гарлаа. Дараа дахин оролдоно уу.'
+        });
       }
 
       return NextResponse.json({
@@ -122,14 +182,14 @@ export async function POST(req: Request) {
       });
     } catch (error) {
       console.error('OpenRouter API error:', error);
-      return NextResponse.json({ 
-        error: error instanceof Error ? error.message : 'Failed to process your request. Please check your OpenRouter API key and try again.' 
-      }, { status: 500 });
+      return NextResponse.json({
+        response: 'Системийн алдаа гарлаа. Дараа дахин оролдоно уу.'
+      });
     }
   } catch (error) {
-    console.error('Chat error:', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Internal server error' 
-    }, { status: 500 });
+    console.error('Chat route error:', error);
+    return NextResponse.json({
+      response: 'Системийн алдаа гарлаа. Дараа дахин оролдоно уу.'
+    });
   }
 } 
