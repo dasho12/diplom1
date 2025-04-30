@@ -15,6 +15,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
+    // If the message is a CV analysis or job matches, return it directly
+    if (message.startsWith('CV Шинжилгээ:') || message.startsWith('Таны CV-тэй тохирох ажлын байрууд:')) {
+      return NextResponse.json({ response: message });
+    }
+
     // Get user's CVs from database
     const cvs = await prisma.cV.findMany({
       where: {
@@ -48,69 +53,49 @@ export async function POST(req: Request) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "model": "mistralai/mistral-7b-instruct:free",
+          "model": "deepseek/deepseek-v3-base:free",
           "max_tokens": 2000,
           "temperature": 0.7,
           "messages": [
             {
               role: 'system',
-              content: `You are a CV analyzer. Analyze the following CV content and provide feedback in Mongolian language.
+              content: `You are a CV analyzer. Analyze the following CV content and provide detailed feedback in Mongolian language.
 
 CV Content: ${cvContent}
 
-First, extract and structure the following information from the CV:
+Provide a comprehensive analysis in this exact format:
 
-1. Хувийн Мэдээлэл (Personal Information):
-   - Нэр, нас, хүйс
-   - Холбоо барих мэдээлэл
-   - Хаяг, байршил
+CV Шинжилгээ:
 
-2. Боловсрол (Education):
-   - Сургуулиуд
-   - Мэргэжлүүд
-   - Он сар
-   - Гол хичээлүүд
-   - Дүн, шагнал
+- Хүч талууд:
+  * Тодорхой бичнэ үү
+  * Жишээгээр дэмжнэ үү
 
-3. Ажлын Туршлага (Work Experience):
-   - Компаниуд
-   - Албан тушаал
-   - Он сар
-   - Гол үүрэг, хариуцлага
-   - Дараах ажлууд
+- Сул талууд:
+  * Тодорхой бичнэ үү
+  * Жишээгээр дэмжнэ үү
 
-4. Ур чадвар (Skills):
-   - Техникийн ур чадвар
-   - Хувь хөгжлийн ур чадвар
-   - Хэлний мэдлэг
-   - Сертификатууд
+Сайжруулах Хэсгүүд:
+- Хэсэг бүрийг тодорхойлно уу
+- Яагаад сайжруулах шаардлагатайг тайлбарлана уу
+- Жишээгээр дэмжнэ үү
 
-5. Төсөл, Дараах Ажлууд (Projects & Achievements):
-   - Төслүүд
-   - Дараах ажлууд
-   - Шагнал, урамшуулал
+Тодорхой Зөвлөмж:
+- Хэсэг бүрт тодорхой зөвлөмж өгнө үү
+- Хэрэгжүүлэх боломжтой байх ёстой
+- Жишээгээр дэмжнэ үү
 
-Then, provide your analysis in this format:
+Жишээ болон Хувилбарууд:
+- Хэсэг бүрт жишээ өгнө үү
+- Хувилбаруудыг тодорхойлно уу
+- Яагаад эдгээр нь сайн гэдгийг тайлбарлана уу
 
-1. CV Шинжилгээ:
-   - Хүч талууд:
-     * Тодорхой бичнэ үү
-     * Жишээгээр дэмжнэ үү
-   - Сул талууд:
-     * Тодорхой бичнэ үү
-     * Жишээгээр дэмжнэ үү
+Алхам Алхмаар Зааварчилгаа:
+- Хэсэг бүрийг хэрхэн сайжруулах вэ
+- Тодорхой алхмуудыг бичнэ үү
+- Жишээгээр дэмжнэ үү
 
-2. Сайжруулах Зөвлөмж:
-   - Хэсэг бүрт тодорхой зөвлөмж
-   - Яагаад энэ нь чухал вэ
-   - Хэрэгжүүлэх арга замууд
-
-3. Жишээ Хувилбарууд:
-   - Хэсэг бүрт жишээ өгнө үү
-   - Яагаад эдгээр нь сайн вэ
-   - Хэрэгжүүлэх боломжтой байх ёстой
-
-Хариултаа тодорхой, ойлгомжтой байлгана уу.`
+Хариултаа дэлгэрэнгүй, тодорхой, ойлгомжтой байлгана уу.`
             },
             {
               role: 'user',

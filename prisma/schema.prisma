@@ -25,6 +25,31 @@ model CV {
   fileType    String
   content     String
   analysis    String?
+  jobMatches  JobMatch[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Job {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  company     String
+  description String
+  requirements String
+  location    String
+  salary      String?
+  jobMatches  JobMatch[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model JobMatch {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  cvId      String   @db.ObjectId
+  jobId     String   @db.ObjectId
+  matchScore Float
+  cv        CV      @relation(fields: [cvId], references: [id])
+  job       Job     @relation(fields: [jobId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 } 

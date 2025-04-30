@@ -8,6 +8,7 @@ import { promisify } from 'util';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
+import { calculateJobMatches } from '@/lib/jobMatching';
 
 interface PythonResult {
   success: boolean;
@@ -64,133 +65,186 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
 async function analyzeCV(content: string) {
   try {
     console.log('Starting CV analysis...');
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "HTTP-Referer": process.env.NEXTAUTH_URL || "http://localhost:3000",
-        "X-Title": "CV Analyzer",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        "model": "deepseek/deepseek-v3-base:free",
-        "max_tokens": 2000,
-        "temperature": 0.7,
-        "messages": [
-          {
-            role: 'system',
-            content: `You are an expert CV analyzer. Analyze the following CV and provide detailed feedback in Mongolian language. First, extract and structure the following information from the CV:
-
-1. Хувийн Мэдээлэл (Personal Information):
-   - Нэр, нас, хүйс
-   - Холбоо барих мэдээлэл
-   - Хаяг, байршил
-
-2. Боловсрол (Education):
-   - Сургуулиуд
-   - Мэргэжлүүд
-   - Он сар
-   - Гол хичээлүүд
-   - Дүн, шагнал
-
-3. Ажлын Туршлага (Work Experience):
-   - Компаниуд
-   - Албан тушаал
-   - Он сар
-   - Гол үүрэг, хариуцлага
-   - Дараах ажлууд
-
-4. Ур чадвар (Skills):
-   - Техникийн ур чадвар
-   - Хувь хөгжлийн ур чадвар
-   - Хэлний мэдлэг
-   - Сертификатууд
-
-5. Төсөл, Дараах Ажлууд (Projects & Achievements):
-   - Төслүүд
-   - Дараах ажлууд
-   - Шагнал, урамшуулал
-
-Then, provide a detailed analysis in this format:
-
-1. CV Шинжилгээ:
-   - Хүч талууд:
-     * Тодорхой бичнэ үү
-     * Жишээгээр дэмжнэ үү
-   - Сул талууд:
-     * Тодорхой бичнэ үү
-     * Жишээгээр дэмжнэ үү
-
-2. Сайжруулах Хэсгүүд:
-   - Хэсэг бүрийг тодорхойлно уу
-   - Яагаад сайжруулах шаардлагатайг тайлбарлана уу
-   - Жишээгээр дэмжнэ үү
-
-3. Тодорхой Зөвлөмж:
-   - Хэсэг бүрт тодорхой зөвлөмж өгнө үү
-   - Хэрэгжүүлэх боломжтой байх ёстой
-   - Жишээгээр дэмжнэ үү
-
-4. Жишээ болон Хувилбарууд:
-   - Хэсэг бүрт жишээ өгнө үү
-   - Хувилбаруудыг тодорхойлно уу
-   - Яагаад эдгээр нь сайн гэдгийг тайлбарлана уу
-
-5. Алхам Алхмаар Зааварчилгаа:
-   - Хэсэг бүрийг хэрхэн сайжруулах вэ
-   - Тодорхой алхмуудыг бичнэ үү
-   - Жишээгээр дэмжнэ үү
-
-Хариултаа мэргэжлийн карьер зөвлөгчийн хувийн зөвлөмж шиг нарийвчилсан, тусламжтай байлгана уу.`
+    
+    // First try with OpenRouter API
+    if (process.env.OPENROUTER_API_KEY) {
+      try {
+        const response: Response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "HTTP-Referer": process.env.NEXTAUTH_URL || "http://localhost:3000",
+            "X-Title": "CV Analyzer",
+            "Content-Type": "application/json"
           },
-          {
-            role: 'user',
-            content: `Дараах CV-г дээрх алхмуудыг дагаж шинжилж, дэлгэрэнгүй санал болгож өгнө үү: ${content}`
+          body: JSON.stringify({
+            "model": "deepseek/deepseek-v3-base:free",
+            "max_tokens": 2000,
+            "temperature": 0.7,
+            "messages": [
+              {
+                role: 'system',
+                content: `You are a CV analyzer. Analyze the following CV content and provide detailed feedback in Mongolian language.
+
+CV Content: ${content}
+
+Provide a comprehensive analysis in this exact format:
+
+CV Шинжилгээ:
+
+- Хүч талууд:
+  * Тодорхой бичнэ үү
+  * Жишээгээр дэмжнэ үү
+
+- Сул талууд:
+  * Тодорхой бичнэ үү
+  * Жишээгээр дэмжнэ үү
+
+Сайжруулах Хэсгүүд:
+- Хэсэг бүрийг тодорхойлно уу
+- Яагаад сайжруулах шаардлагатайг тайлбарлана уу
+- Жишээгээр дэмжнэ үү
+
+Тодорхой Зөвлөмж:
+- Хэсэг бүрт тодорхой зөвлөмж өгнө үү
+- Хэрэгжүүлэх боломжтой байх ёстой
+- Жишээгээр дэмжнэ үү
+
+Жишээ болон Хувилбарууд:
+- Хэсэг бүрт жишээ өгнө үү
+- Хувилбаруудыг тодорхойлно уу
+- Яагаад эдгээр нь сайн гэдгийг тайлбарлана уу
+
+Алхам Алхмаар Зааварчилгаа:
+- Хэсэг бүрийг хэрхэн сайжруулах вэ
+- Тодорхой алхмуудыг бичнэ үү
+- Жишээгээр дэмжнэ үү
+
+Хариултаа дэлгэрэнгүй, тодорхой, ойлгомжтой байлгана уу.`
+              },
+              {
+                role: 'user',
+                content: `Дараах CV-г дээрх алхмуудыг дагаж шинжилж, дэлгэрэнгүй санал болгож өгнө үү: ${content}`
+              }
+            ]
+          })
+        });
+
+        if (response.ok) {
+          const data: any = await response.json();
+          if (data?.choices?.[0]?.message?.content) {
+            return data.choices[0].message.content;
           }
-        ]
-      })
-    });
-
-    console.log('OpenRouter response status:', response.status);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
-      console.error('OpenRouter error:', errorData);
-      
-      // Check if it's a rate limit error
-      if (errorData.error?.code === 429) {
-        return `Уучлаарай, одоогоор системийн хязгаарлалттай байна. Дараах зүйлсийг хийж болно:
-
-1. Хэдэн минут хүлээгээд дахин оролдоно уу
-2. Энэ CV-г хадгалж авч, дараа дахин оролдоно уу
-3. Чат функцээр CV-гээ дэлгэрэнгүй шинжилгээ хийх боломжтой
-
-Одоогийн байдлаар CV-г амжилттай хадгалж авлаа. Дараа дахин оролдох үед дэлгэрэнгүй шинжилгээ хийх боломжтой.`;
+        }
+      } catch (error) {
+        console.error('OpenRouter API error:', error);
       }
-      
-      throw new Error('Failed to analyze CV');
     }
 
-    const data = await response.json();
-    console.log('OpenRouter response data:', data);
-
-    if (!data?.choices?.[0]?.message?.content) {
-      console.error('Invalid analysis response structure:', data);
-      throw new Error('Invalid analysis response');
-    }
-
-    const analysis = data.choices[0].message.content;
-    console.log('Analysis completed successfully');
-    return analysis;
+    // Fallback to local analysis if API fails or rate limited
+    console.log('Using fallback analysis...');
+    return generateFallbackAnalysis(content);
   } catch (error) {
     console.error('CV analysis error:', error);
-    return `CV-г амжилттай хадгалж авлаа. Дараах зүйлсийг хийж болно:
-
-1. Чат функцээр CV-гээ дэлгэрэнгүй шинжилгээ хийх
-2. Хэдэн минут хүлээгээд дахин оролдох
-3. CV-гээ засварлаад дахин илгээх
-
-Одоогийн байдлаар CV-г амжилттай хадгалж авлаа. Дараа дахин оролдох үед дэлгэрэнгүй шинжилгээ хийх боломжтой.`;
+    return generateFallbackAnalysis(content);
   }
+}
+
+function generateFallbackAnalysis(content: string): string {
+  const cvLower = content.toLowerCase();
+  
+  // Extract basic information
+  const name = content.split('\n')[0] || 'Нэр олдсонгүй';
+  const experience = extractExperience(cvLower);
+  const skills = extractSkills(cvLower);
+  const education = extractEducation(cvLower);
+
+  return `CV Шинжилгээ:
+
+- Хүч талууд:
+  * ${experience.years} жилийн ${experience.field} туршлагатай
+  * ${skills.technical.join(', ')} гэсэн техникийн ур чадвартай
+  * ${education.level} боловсролтой
+
+- Сул талууд:
+  * ${skills.missing.length > 0 ? skills.missing.join(', ') + ' гэсэн ур чадвар нэмэх шаардлагатай' : 'Тодорхой сул тал илрээгүй'}
+  * ${experience.missing.length > 0 ? experience.missing.join(', ') + ' гэсэн туршлага нэмэх шаардлагатай' : 'Тодорхой сул тал илрээгүй'}
+
+Сайжруулах Хэсгүүд:
+- Ур чадварын хэсгийг дэлгэрэнгүй бичих
+- Ажлын туршлагыг тоон үзүүлэлтээр харуулах
+- Боловсролын мэдээллийг тодорхой бичих
+
+Тодорхой Зөвлөмж:
+- Ур чадварын хэсэгт сертификатуудыг нэмэх
+- Ажлын туршлагыг жишээгээр дэмжих
+- Боловсролын мэдээллийг дэлгэрэнгүй бичих
+
+Жишээ болон Хувилбарууд:
+- Ур чадвар: "Python, JavaScript, React, Node.js, MongoDB"
+- Туршлага: "3 жилийн веб хөгжүүлэлтийн туршлага"
+- Боловсрол: "Бакалавр, Мэдээллийн технологи"
+
+Алхам Алхмаар Зааварчилгаа:
+1. Ур чадварын хэсгийг сайжруулах
+2. Ажлын туршлагыг дэлгэрэнгүй бичих
+3. Боловсролын мэдээллийг тодруулах`;
+}
+
+function extractExperience(text: string): { years: number; field: string; missing: string[] } {
+  const experiencePatterns = [
+    /(\d+)\s*(?:жил|year|years?)\s*(?:туршлага|experience)/i,
+    /(\d+)\s*(?:жил|year|years?)\s*(?:ажилласан|worked)/i
+  ];
+  
+  let years = 0;
+  let field = 'ажлын';
+  const missing = [];
+
+  for (const pattern of experiencePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      years = parseInt(match[1]);
+      break;
+    }
+  }
+
+  if (text.includes('маркетинг')) field = 'маркетингийн';
+  else if (text.includes('программист')) field = 'програмчлалын';
+  else if (text.includes('дизайн')) field = 'дизайны';
+
+  if (years < 2) missing.push('2-3 жилийн туршлага');
+  if (!text.includes('проект')) missing.push('төслийн туршлага');
+
+  return { years, field, missing };
+}
+
+function extractSkills(text: string): { technical: string[]; missing: string[] } {
+  const technical = [];
+  const missing = [];
+
+  if (text.includes('сошиал медиа')) technical.push('Сошиал медиа');
+  if (text.includes('маркетинг')) technical.push('Маркетинг');
+  if (text.includes('брэнд')) technical.push('Брэнд');
+  if (text.includes('судалгаа')) technical.push('Судалгаа');
+  if (text.includes('хэрэглэгч')) technical.push('Хэрэглэгчийн зан төлөв');
+  if (text.includes('баг')) technical.push('Багийн ажил');
+  if (text.includes('удирдлага')) technical.push('Удирдлага');
+  if (text.includes('стратеги')) technical.push('Стратеги');
+  if (text.includes('төсөл')) technical.push('Төслийн удирдлага');
+
+  if (!text.includes('англи хэл')) missing.push('Англи хэл');
+  if (!text.includes('компьютер')) missing.push('Компьютер');
+  if (!text.includes('коммуникаци')) missing.push('Коммуникацийн ур чадвар');
+
+  return { technical, missing };
+}
+
+function extractEducation(text: string): { level: string } {
+  if (text.includes('магистр')) return { level: 'Магистр' };
+  if (text.includes('бакалавр')) return { level: 'Бакалавр' };
+  if (text.includes('доктор')) return { level: 'Доктор' };
+  return { level: 'Дунд' };
 }
 
 export async function POST(req: Request) {
@@ -299,7 +353,8 @@ export async function POST(req: Request) {
           fileName: file.name,
           fileType: file.type,
           content,
-        },
+          analysis
+        }
       });
       console.log('CV saved successfully:', cv.id);
 
@@ -307,7 +362,7 @@ export async function POST(req: Request) {
       return new NextResponse(
         JSON.stringify({
           ...cv,
-          content: content // Include the content in the response
+          content: content
         }),
         { 
           status: 200, 
