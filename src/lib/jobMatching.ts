@@ -8,6 +8,7 @@ interface JobMatch {
     company: string;
     location: string;
     salary?: string;
+    requirements: string;
   };
   matchScore: number;
   matchDetails: {
@@ -17,6 +18,19 @@ interface JobMatch {
     overall: number;
   };
 }
+
+interface SkillWithAlternatives {
+  skill: string;
+  weight: number;
+  alternatives: string[];
+}
+
+interface SkillWithoutAlternatives {
+  skill: string;
+  weight: number;
+}
+
+type Skill = SkillWithAlternatives | SkillWithoutAlternatives;
 
 export async function calculateJobMatches(cvContent: string): Promise<JobMatch[]> {
   try {
@@ -44,7 +58,8 @@ export async function calculateJobMatches(cvContent: string): Promise<JobMatch[]
             title: job.title,
             company: job.company,
             location: job.location,
-            salary: job.salary || undefined
+            salary: job.salary || undefined,
+            requirements: job.requirements
           },
           matchScore: matchDetails.overall,
           matchDetails
@@ -90,24 +105,42 @@ async function calculateDetailedMatchScore(cvContent: string, jobRequirements: s
         "messages": [
           {
             role: 'system',
-            content: `You are a job matching expert. Analyze the CV content and job requirements, then provide detailed match scores for each category and an overall score. The scores should be based on:
+            content: `You are a job matching expert specializing in marketing roles. Analyze the CV content and job requirements, then provide detailed match scores for each category and an overall score. The scores should be based on:
 
-1. Experience Match (30% of total):
+1. Experience Match (35% of total):
    - Years of experience (e.g., "5 жилийн туршлага" = 100% for 5 years requirement)
-   - Relevant industry experience
-   - Role-specific experience
+   - Marketing-specific experience (digital, brand, social media, etc.)
+   - Industry experience
+   - Management experience
+   - Project leadership experience
 
-2. Skills Match (40% of total):
-   - Required technical skills (e.g., "сошиал медиа", "маркетинг")
-   - Soft skills (e.g., "бүтээлч сэтгэлгээ", "багийн ажил")
-   - Language skills
-   - Certifications
+2. Skills Match (45% of total):
+   - Core Marketing Skills (20%):
+     * Digital Marketing (SEO, SEM, Social Media)
+     * Content Marketing
+     * Brand Management
+     * Market Research
+     * Marketing Strategy
+   
+   - Technical Skills (10%):
+     * Analytics Tools (Google Analytics, etc.)
+     * Marketing Automation
+     * CRM Systems
+     * Design Tools
+     * Data Analysis
+   
+   - Management Skills (15%):
+     * Team Leadership
+     * Project Management
+     * Budget Management
+     * Strategic Planning
+     * Stakeholder Management
 
-3. Education Match (30% of total):
-   - Required degree level
-   - Field of study
-   - Relevant coursework
-   - Academic achievements
+3. Education Match (20% of total):
+   - Marketing/Business degree
+   - Relevant certifications
+   - Professional development
+   - Industry training
 
 Return the scores in this exact format:
 {
@@ -118,7 +151,7 @@ Return the scores in this exact format:
 }
 
 The overall score should be calculated as:
-(experience * 0.3) + (skills * 0.4) + (education * 0.3)
+(experience * 0.35) + (skills * 0.45) + (education * 0.20)
 
 Each score should be between 0 and 100.`
           },
@@ -169,16 +202,79 @@ Each score should be between 0 and 100.`
 
 function calculateFallbackMatchScore(cvContent: string, jobRequirements: string) {
   try {
-    console.log('Using fallback matching algorithm');
+    console.log('Using enhanced fallback matching algorithm');
     
     const cvLower = cvContent.toLowerCase();
     const requirementsLower = jobRequirements.toLowerCase();
     
-    // Experience matching (30% of total)
+    // Check if this is a marketing role
+    const isMarketingRole = requirementsLower.includes('marketing') || 
+                           requirementsLower.includes('маркетинг') ||
+                           requirementsLower.includes('brand') ||
+                           requirementsLower.includes('брэнд') ||
+                           requirementsLower.includes('digital') ||
+                           requirementsLower.includes('дижитал') ||
+                           requirementsLower.includes('social media') ||
+                           requirementsLower.includes('сошиал медиа');
+    
+    // Check for specific job titles and industries
+    const specificJobTitles = [
+      { title: 'marketing manager', weight: 2.0, alternatives: ['маркетингийн менежер'] },
+      { title: 'маркетингийн менежер', weight: 2.0, alternatives: ['marketing manager'] },
+      { title: 'construction marketing manager', weight: 2.0, alternatives: ['барилгын маркетингийн менежер'] },
+      { title: 'барилгын маркетингийн менежер', weight: 2.0, alternatives: ['construction marketing manager'] },
+      { title: 'digital marketing manager', weight: 1.8, alternatives: ['дижитал маркетингийн менежер'] },
+      { title: 'дижитал маркетингийн менежер', weight: 1.8, alternatives: ['digital marketing manager'] },
+      { title: 'brand manager', weight: 1.8, alternatives: ['брэнд менежер'] },
+      { title: 'брэнд менежер', weight: 1.8, alternatives: ['brand manager'] }
+    ];
+    
+    // Check for industry-specific keywords
+    const industryKeywords = [
+      { industry: 'construction', weight: 1.5, alternatives: ['барилга', 'building'] },
+      { industry: 'барилга', weight: 1.5, alternatives: ['construction', 'building'] },
+      { industry: 'technology', weight: 1.5, alternatives: ['технологи', 'tech'] },
+      { industry: 'технологи', weight: 1.5, alternatives: ['technology', 'tech'] },
+      { industry: 'finance', weight: 1.5, alternatives: ['санхүү', 'banking'] },
+      { industry: 'санхүү', weight: 1.5, alternatives: ['finance', 'banking'] }
+    ];
+    
+    // Calculate title match score
+    let titleMatchScore = 0;
+    let maxTitleWeight = 0;
+    
+    for (const { title, weight, alternatives } of specificJobTitles) {
+      if (requirementsLower.includes(title)) {
+        maxTitleWeight = Math.max(maxTitleWeight, weight);
+        if (cvLower.includes(title) || alternatives.some(alt => cvLower.includes(alt))) {
+          titleMatchScore += weight;
+        }
+      }
+    }
+    
+    // Calculate industry match score
+    let industryMatchScore = 0;
+    let maxIndustryWeight = 0;
+    
+    for (const { industry, weight, alternatives } of industryKeywords) {
+      if (requirementsLower.includes(industry)) {
+        maxIndustryWeight = Math.max(maxIndustryWeight, weight);
+        if (cvLower.includes(industry) || alternatives.some(alt => cvLower.includes(alt))) {
+          industryMatchScore += weight;
+        }
+      }
+    }
+    
+    // Normalize title and industry scores
+    const normalizedTitleScore = maxTitleWeight > 0 ? (titleMatchScore / maxTitleWeight) * 100 : 0;
+    const normalizedIndustryScore = maxIndustryWeight > 0 ? (industryMatchScore / maxIndustryWeight) * 100 : 0;
+    
+    // Experience matching (35% of total)
     let experienceScore = 0;
     const experiencePatterns = [
       /(\d+)\s*(?:жил|year|years?)\s*(?:туршлага|experience)/i,
-      /(\d+)\s*(?:жил|year|years?)\s*(?:ажилласан|worked)/i
+      /(\d+)\s*(?:жил|year|years?)\s*(?:ажилласан|worked)/i,
+      /(\d+)\s*(?:жил|year|years?)\s*(?:маркетинг|marketing)/i
     ];
     
     // Extract years from requirements
@@ -201,70 +297,210 @@ function calculateFallbackMatchScore(cvContent: string, jobRequirements: string)
       }
     }
     
+    // Calculate marketing experience score
+    let marketingExperienceScore = 0;
+    const marketingExperienceKeywords = [
+      { keyword: 'marketing manager', weight: 2.0 },
+      { keyword: 'маркетингийн менежер', weight: 2.0 },
+      { keyword: 'brand manager', weight: 1.8 },
+      { keyword: 'брэнд менежер', weight: 1.8 },
+      { keyword: 'digital marketing', weight: 1.5 },
+      { keyword: 'дижитал маркетинг', weight: 1.5 },
+      { keyword: 'social media', weight: 1.5 },
+      { keyword: 'сошиал медиа', weight: 1.5 },
+      { keyword: 'content marketing', weight: 1.3 },
+      { keyword: 'контент маркетинг', weight: 1.3 },
+      { keyword: 'market research', weight: 1.3 },
+      { keyword: 'зах зээлийн судалгаа', weight: 1.3 },
+      { keyword: 'brand management', weight: 1.3 },
+      { keyword: 'брэнд удирдлага', weight: 1.3 },
+      { keyword: 'marketing strategy', weight: 1.3 },
+      { keyword: 'маркетингийн стратеги', weight: 1.3 }
+    ];
+    
+    for (const { keyword, weight } of marketingExperienceKeywords) {
+      // Check for partial matches
+      if (cvLower.includes(keyword) || 
+          (keyword.includes('marketing') && cvLower.includes('маркетинг')) ||
+          (keyword.includes('маркетинг') && cvLower.includes('marketing'))) {
+        marketingExperienceScore += weight;
+      }
+    }
+    
+    // Normalize marketing experience score (max 30 points)
+    marketingExperienceScore = Math.min(marketingExperienceScore * 10, 30);
+    
     if (requiredYears === 0) {
       experienceScore = 100; // No experience requirement
     } else if (cvYears === 0) {
-      experienceScore = 0; // No experience mentioned
+      // If no years mentioned but has relevant experience, give partial credit
+      if (marketingExperienceScore > 0) {
+        experienceScore = Math.min(marketingExperienceScore * 2, 50);
+      } else {
+        experienceScore = 0;
+      }
     } else {
-      experienceScore = Math.min((cvYears / requiredYears) * 100, 100);
-    }
-    
-    // Skills matching (40% of total)
-    const skillKeywords = [
-      'сошиал медиа', 'social media',
-      'маркетинг', 'marketing',
-      'брэнд', 'brand',
-      'судалгаа', 'research',
-      'хэрэглэгч', 'customer',
-      'баг', 'team',
-      'удирдлага', 'management',
-      'стратеги', 'strategy',
-      'төсөл', 'project',
-      'хэл', 'language'
-    ];
-    
-    let skillsScore = 0;
-    let matchCount = 0;
-    for (const skill of skillKeywords) {
-      if (requirementsLower.includes(skill) && cvLower.includes(skill)) {
-        matchCount++;
+      // Base experience score (70 points max)
+      let baseScore = Math.min((cvYears / requiredYears) * 70, 70);
+      
+      // Add marketing experience bonus (30 points max)
+      if (isMarketingRole) {
+        experienceScore = Math.min(baseScore + marketingExperienceScore, 100);
+      } else {
+        experienceScore = baseScore;
       }
     }
     
-    const totalSkills = skillKeywords.filter(skill => requirementsLower.includes(skill)).length;
-    if (totalSkills === 0) {
-      skillsScore = 100;
-    } else {
-      skillsScore = (matchCount / totalSkills) * 100;
+    // Skills matching (45% of total)
+    const skillCategories: Record<string, Skill[]> = {
+      coreMarketing: [
+        { skill: 'digital marketing', weight: 2.0, alternatives: ['дижитал маркетинг', 'digital', 'дижитал'] },
+        { skill: 'дижитал маркетинг', weight: 2.0, alternatives: ['digital marketing', 'digital', 'дижитал'] },
+        { skill: 'social media', weight: 1.8, alternatives: ['сошиал медиа', 'social', 'сошиал'] },
+        { skill: 'сошиал медиа', weight: 1.8, alternatives: ['social media', 'social', 'сошиал'] },
+        { skill: 'content marketing', weight: 1.8, alternatives: ['контент маркетинг', 'content', 'контент'] },
+        { skill: 'контент маркетинг', weight: 1.8, alternatives: ['content marketing', 'content', 'контент'] },
+        { skill: 'brand management', weight: 1.8, alternatives: ['брэнд удирдлага', 'brand', 'брэнд'] },
+        { skill: 'брэнд удирдлага', weight: 1.8, alternatives: ['brand management', 'brand', 'брэнд'] },
+        { skill: 'market research', weight: 1.5, alternatives: ['зах зээлийн судалгаа', 'research', 'судалгаа'] },
+        { skill: 'зах зээлийн судалгаа', weight: 1.5, alternatives: ['market research', 'research', 'судалгаа'] },
+        { skill: 'marketing strategy', weight: 1.5, alternatives: ['маркетингийн стратеги', 'strategy', 'стратеги'] },
+        { skill: 'маркетингийн стратеги', weight: 1.5, alternatives: ['marketing strategy', 'strategy', 'стратеги'] },
+        { skill: 'seo', weight: 1.3, alternatives: ['search engine optimization'] },
+        { skill: 'sem', weight: 1.3, alternatives: ['search engine marketing'] },
+        { skill: 'ppc', weight: 1.3, alternatives: ['pay per click', 'cost per click'] },
+        { skill: 'email marketing', weight: 1.3, alternatives: ['email маркетинг', 'email', 'имэйл'] },
+        { skill: 'email маркетинг', weight: 1.3, alternatives: ['email marketing', 'email', 'имэйл'] }
+      ],
+      technical: [
+        { skill: 'google analytics', weight: 1.5 },
+        { skill: 'analytics', weight: 1.3 },
+        { skill: 'marketing automation', weight: 1.5 },
+        { skill: 'автоматжуулалт', weight: 1.5 },
+        { skill: 'crm', weight: 1.3 },
+        { skill: 'customer relationship', weight: 1.3 },
+        { skill: 'data analysis', weight: 1.3 },
+        { skill: 'data analytics', weight: 1.3 },
+        { skill: 'adobe', weight: 1.0 },
+        { skill: 'photoshop', weight: 1.0 },
+        { skill: 'illustrator', weight: 1.0 },
+        { skill: 'excel', weight: 1.0 },
+        { skill: 'powerpoint', weight: 1.0 },
+        { skill: 'presentation', weight: 1.0 }
+      ],
+      management: [
+        { skill: 'team leadership', weight: 1.5 },
+        { skill: 'багийн удирдлага', weight: 1.5 },
+        { skill: 'project management', weight: 1.5 },
+        { skill: 'төслийн удирдлага', weight: 1.5 },
+        { skill: 'budget management', weight: 1.3 },
+        { skill: 'бюджет удирдлага', weight: 1.3 },
+        { skill: 'strategic planning', weight: 1.3 },
+        { skill: 'стратеги төлөвлөлт', weight: 1.3 },
+        { skill: 'stakeholder management', weight: 1.3 },
+        { skill: 'оролцогч талуудын удирдлага', weight: 1.3 },
+        { skill: 'team building', weight: 1.0 },
+        { skill: 'баг бүрдүүлэлт', weight: 1.0 },
+        { skill: 'performance management', weight: 1.0 },
+        { skill: 'гүйцэтгэлийн удирдлага', weight: 1.0 }
+      ]
+    };
+    
+    let skillsScore = 0;
+    let coreMarketingScore = 0;
+    let technicalScore = 0;
+    let managementScore = 0;
+    
+    // Calculate scores for each category
+    for (const category in skillCategories) {
+      let categoryScore = 0;
+      const skills = skillCategories[category as keyof typeof skillCategories];
+      let totalWeight = 0;
+      
+      for (const skill of skills) {
+        if (requirementsLower.includes(skill.skill)) {
+          totalWeight += skill.weight;
+          // Check for exact match or alternative matches
+          if (cvLower.includes(skill.skill) || 
+              ('alternatives' in skill && skill.alternatives.some((alt: string) => cvLower.includes(alt)))) {
+            categoryScore += skill.weight;
+          }
+        }
+      }
+      
+      if (totalWeight > 0) {
+        const normalizedScore = (categoryScore / totalWeight) * 100;
+        
+        switch (category) {
+          case 'coreMarketing':
+            coreMarketingScore = normalizedScore;
+            break;
+          case 'technical':
+            technicalScore = normalizedScore;
+            break;
+          case 'management':
+            managementScore = normalizedScore;
+            break;
+        }
+      }
     }
     
-    // Education matching (30% of total)
+    // Calculate weighted skills score with more emphasis on core marketing for marketing roles
+    if (isMarketingRole) {
+      skillsScore = (coreMarketingScore * 0.6) + (technicalScore * 0.25) + (managementScore * 0.15);
+    } else {
+      skillsScore = (coreMarketingScore * 0.4) + (technicalScore * 0.3) + (managementScore * 0.3);
+    }
+    
+    // Education matching (20% of total)
     const educationKeywords = [
-      'бакалавр', 'bachelor',
-      'магистр', 'master',
-      'доктор', 'phd',
-      'сэзис', 'sezis',
-      'их сургууль', 'university',
-      'коллеж', 'college'
+      { keyword: 'бакалавр', weight: 1.0 },
+      { keyword: 'bachelor', weight: 1.0 },
+      { keyword: 'магистр', weight: 1.5 },
+      { keyword: 'master', weight: 1.5 },
+      { keyword: 'доктор', weight: 2.0 },
+      { keyword: 'phd', weight: 2.0 },
+      { keyword: 'сэзис', weight: 1.0 },
+      { keyword: 'sezis', weight: 1.0 },
+      { keyword: 'их сургууль', weight: 1.0 },
+      { keyword: 'university', weight: 1.0 },
+      { keyword: 'коллеж', weight: 0.8 },
+      { keyword: 'college', weight: 0.8 },
+      { keyword: 'marketing', weight: 1.5 },
+      { keyword: 'маркетинг', weight: 1.5 },
+      { keyword: 'business', weight: 1.3 },
+      { keyword: 'бизнес', weight: 1.3 },
+      { keyword: 'management', weight: 1.3 },
+      { keyword: 'удирдлага', weight: 1.3 },
+      { keyword: 'economics', weight: 1.0 },
+      { keyword: 'эдийн засаг', weight: 1.0 }
     ];
     
     let educationScore = 0;
-    let educationMatchCount = 0;
-    for (const keyword of educationKeywords) {
-      if (requirementsLower.includes(keyword) && cvLower.includes(keyword)) {
-        educationMatchCount++;
+    let educationMatchScore = 0;
+    let totalEducationWeight = 0;
+    
+    for (const { keyword, weight } of educationKeywords) {
+      if (requirementsLower.includes(keyword)) {
+        totalEducationWeight += weight;
+        if (cvLower.includes(keyword)) {
+          educationMatchScore += weight;
+        }
       }
     }
     
-    const totalEducation = educationKeywords.filter(keyword => requirementsLower.includes(keyword)).length;
-    if (totalEducation === 0) {
+    if (totalEducationWeight === 0) {
       educationScore = 100;
     } else {
-      educationScore = (educationMatchCount / totalEducation) * 100;
+      educationScore = (educationMatchScore / totalEducationWeight) * 100;
     }
     
-    // Calculate overall score
-    const overallScore = (experienceScore * 0.3) + (skillsScore * 0.4) + (educationScore * 0.3);
+    // Calculate overall score with title and industry consideration
+    const overallScore = (experienceScore * 0.35) + 
+                        (skillsScore * 0.35) + 
+                        (educationScore * 0.15) +
+                        (normalizedTitleScore * 0.10) +
+                        (normalizedIndustryScore * 0.05);
     
     return {
       experience: Math.round(experienceScore),

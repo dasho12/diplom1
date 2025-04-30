@@ -9,6 +9,52 @@ interface MatchDetails {
   overall: number;
 }
 
+interface Job {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  salary?: string;
+  requirements: string;
+}
+
+interface JobMatch {
+  job: Job;
+  matchScore: number;
+  matchDetails: MatchDetails;
+}
+
+interface JobCategory {
+  titles: string[];
+  keywords: string[];
+}
+
+interface JobCategories {
+  marketing: JobCategory;
+  construction: JobCategory;
+  technology: JobCategory;
+  finance: JobCategory;
+}
+
+const jobCategories: JobCategories = {
+  marketing: {
+    titles: ['marketing manager', 'маркетингийн менежер', 'digital marketing manager', 'дижитал маркетингийн менежер'],
+    keywords: ['marketing', 'маркетинг', 'digital', 'дижитал', 'brand', 'брэнд']
+  },
+  construction: {
+    titles: ['construction marketing manager', 'барилгын маркетингийн менежер'],
+    keywords: ['construction', 'барилга', 'building', 'building materials', 'барилгын материал']
+  },
+  technology: {
+    titles: ['tech marketing manager', 'технологийн маркетингийн менежер'],
+    keywords: ['technology', 'технологи', 'tech', 'software', 'программ']
+  },
+  finance: {
+    titles: ['finance marketing manager', 'санхүүгийн маркетингийн менежер'],
+    keywords: ['finance', 'санхүү', 'banking', 'банк', 'financial', 'financial services']
+  }
+};
+
 export async function POST(req: Request) {
   try {
     console.log('Job matching API called');
@@ -32,14 +78,102 @@ export async function POST(req: Request) {
 
     // Filter out low matches and sort by score
     const filteredMatches = matches
-      .filter(match => match.matchScore >= 60) // Only show matches with 60% or higher
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 5); // Show only top 5 matches
+      .filter(match => {
+        // Get the job title and requirements in lowercase
+        const jobTitle = match.job.title.toLowerCase();
+        const jobRequirements = match.job.requirements.toLowerCase();
+        
+        // Extract the main job title from the CV content
+        const cvTitle = content.toLowerCase();
+        
+        // Determine the CV's job category
+        let cvCategory: keyof JobCategories | null = null;
+        for (const [category, data] of Object.entries(jobCategories) as [keyof JobCategories, JobCategory][]) {
+          if (data.titles.some((title: string) => cvTitle.includes(title)) || 
+              data.keywords.some((keyword: string) => cvTitle.includes(keyword))) {
+            cvCategory = category;
+            break;
+          }
+        }
+        
+        // If we can't determine the CV's category, use more lenient matching
+        if (!cvCategory) {
+          return match.matchScore >= 50;
+        }
+        
+        // Check if the job matches the CV's category
+        const jobCategory = Object.entries(jobCategories).find(([_, data]) => 
+          data.titles.some((title: string) => jobTitle.includes(title)) || 
+          data.keywords.some((keyword: string) => jobTitle.includes(keyword) || jobRequirements.includes(keyword))
+        )?.[0] as keyof JobCategories;
+        
+        // If the job's category doesn't match the CV's category, reject it
+        if (jobCategory !== cvCategory) {
+          return false;
+        }
+        
+        // For matching categories, apply appropriate thresholds
+        const hasGoodOverallScore = match.matchScore >= 50;
+        const hasGoodSkills = match.matchDetails.skills >= 40;
+        
+        // Check for exact title match
+        const hasExactTitleMatch = jobCategories[cvCategory].titles.some((title: string) => 
+          jobTitle === title || jobTitle.includes(title)
+        );
+        
+        if (hasExactTitleMatch) {
+          return match.matchScore >= 40 && hasGoodSkills;
+        }
+        
+        return hasGoodOverallScore && hasGoodSkills;
+      })
+      .sort((a, b) => {
+        // First, prioritize exact title matches
+        const aTitle = a.job.title.toLowerCase();
+        const bTitle = b.job.title.toLowerCase();
+        
+        // Get the CV's category
+        const cvTitle = content.toLowerCase();
+        let cvCategory: keyof JobCategories | null = null;
+        for (const [category, data] of Object.entries(jobCategories) as [keyof JobCategories, JobCategory][]) {
+          if (data.titles.some((title: string) => cvTitle.includes(title)) || 
+              data.keywords.some((keyword: string) => cvTitle.includes(keyword))) {
+            cvCategory = category;
+            break;
+          }
+        }
+        
+        if (cvCategory) {
+          const aIsExactMatch = jobCategories[cvCategory].titles.some((title: string) => 
+            aTitle === title || aTitle.includes(title)
+          );
+          const bIsExactMatch = jobCategories[cvCategory].titles.some((title: string) => 
+            bTitle === title || bTitle.includes(title)
+          );
+          
+          if (aIsExactMatch && !bIsExactMatch) return -1;
+          if (!aIsExactMatch && bIsExactMatch) return 1;
+        }
+        
+        // Then sort by overall score
+        if (b.matchScore !== a.matchScore) {
+          return b.matchScore - a.matchScore;
+        }
+        
+        // If scores are equal, prioritize matches with better skills
+        if (b.matchDetails.skills !== a.matchDetails.skills) {
+          return b.matchDetails.skills - a.matchDetails.skills;
+        }
+        
+        // If skills are equal, prioritize matches with better experience
+        return b.matchDetails.experience - a.matchDetails.experience;
+      })
+      .slice(0, 10); // Show top 10 matches
 
     console.log('Filtered matches:', filteredMatches.length);
 
     if (filteredMatches.length === 0) {
-      console.log('No matches found with score >= 60%');
+      console.log('No matches found with score >= 50%');
       return NextResponse.json([]);
     }
 
@@ -62,125 +196,4 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
-
-function calculateDetailedMatchScore(cvContent: string, jobRequirements: string): MatchDetails {
-  try {
-    const cvLower = cvContent.toLowerCase();
-    const requirementsLower = jobRequirements.toLowerCase();
-
-    // Experience matching (30% of total score)
-    const experienceScore = calculateExperienceMatch(cvLower, requirementsLower);
-
-    // Skills matching (40% of total score)
-    const skillsScore = calculateSkillsMatch(cvLower, requirementsLower);
-
-    // Education matching (30% of total score)
-    const educationScore = calculateEducationMatch(cvLower, requirementsLower);
-
-    // Calculate overall score
-    const overallScore = (experienceScore * 0.3) + (skillsScore * 0.4) + (educationScore * 0.3);
-
-    return {
-      experience: Math.round(experienceScore),
-      skills: Math.round(skillsScore),
-      education: Math.round(educationScore),
-      overall: Math.round(overallScore)
-    };
-  } catch (error) {
-    console.error('Error calculating match score:', error);
-    return {
-      experience: 0,
-      skills: 0,
-      education: 0,
-      overall: 0
-    };
-  }
-}
-
-function calculateExperienceMatch(cvContent: string, requirements: string): number {
-  const experiencePatterns = [
-    /(\d+)\s*(?:жил|year|years?)\s*(?:туршлага|experience)/i,
-    /(\d+)\s*(?:жил|year|years?)\s*(?:ажилласан|worked)/i
-  ];
-
-  // Extract years from requirements
-  let requiredYears = 0;
-  for (const pattern of experiencePatterns) {
-    const match = requirements.match(pattern);
-    if (match) {
-      requiredYears = parseInt(match[1]);
-      break;
-    }
-  }
-
-  // Extract years from CV
-  let cvYears = 0;
-  for (const pattern of experiencePatterns) {
-    const match = cvContent.match(pattern);
-    if (match) {
-      cvYears = parseInt(match[1]);
-      break;
-    }
-  }
-
-  if (requiredYears === 0) return 100; // No experience requirement
-  if (cvYears === 0) return 0; // No experience mentioned
-
-  // Calculate match percentage
-  const matchPercentage = (cvYears / requiredYears) * 100;
-  return Math.min(matchPercentage, 100);
-}
-
-function calculateSkillsMatch(cvContent: string, requirements: string): number {
-  // Common skills to look for
-  const skillKeywords = [
-    'сошиал медиа', 'social media',
-    'маркетинг', 'marketing',
-    'брэнд', 'brand',
-    'судалгаа', 'research',
-    'хэрэглэгч', 'customer',
-    'баг', 'team',
-    'удирдлага', 'management',
-    'стратеги', 'strategy',
-    'төсөл', 'project',
-    'хэл', 'language'
-  ];
-
-  // Count matching skills
-  let matchCount = 0;
-  for (const skill of skillKeywords) {
-    if (requirements.toLowerCase().includes(skill) && cvContent.toLowerCase().includes(skill)) {
-      matchCount++;
-    }
-  }
-
-  // Calculate percentage
-  const totalSkills = skillKeywords.filter(skill => requirements.toLowerCase().includes(skill)).length;
-  if (totalSkills === 0) return 100;
-  return (matchCount / totalSkills) * 100;
-}
-
-function calculateEducationMatch(cvContent: string, requirements: string): number {
-  const educationKeywords = [
-    'бакалавр', 'bachelor',
-    'магистр', 'master',
-    'доктор', 'phd',
-    'сэзис', 'sezis',
-    'их сургууль', 'university',
-    'коллеж', 'college'
-  ];
-
-  // Count matching education requirements
-  let matchCount = 0;
-  for (const keyword of educationKeywords) {
-    if (requirements.toLowerCase().includes(keyword) && cvContent.toLowerCase().includes(keyword)) {
-      matchCount++;
-    }
-  }
-
-  // Calculate percentage
-  const totalEducation = educationKeywords.filter(keyword => requirements.toLowerCase().includes(keyword)).length;
-  if (totalEducation === 0) return 100;
-  return (matchCount / totalEducation) * 100;
 } 
