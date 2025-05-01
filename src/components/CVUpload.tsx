@@ -1,15 +1,18 @@
-'use client';
-import { useState, useRef } from 'react';
-import { useSession } from 'next-auth/react';
-import { useChat } from '@/providers/ChatProvider';
+"use client";
+import { useState, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useChat } from "@/providers/ChatProvider";
 
 interface JobMatch {
   job: {
     id: string;
     title: string;
-    company: string;
+    company: {
+      name: string;
+    };
     location: string;
     salary?: string;
+    requirements: string;
   };
   matchScore: number;
   matchDetails: {
@@ -20,7 +23,7 @@ interface JobMatch {
   };
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function CVUpload() {
   const { data: session } = useSession();
@@ -36,13 +39,16 @@ export default function CVUpload() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.type === 'application/pdf' || 
-          selectedFile.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-          selectedFile.type === 'application/msword') {
+      if (
+        selectedFile.type === "application/pdf" ||
+        selectedFile.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        selectedFile.type === "application/msword"
+      ) {
         setFile(selectedFile);
         setError(null);
       } else {
-        setError('Please upload a PDF or Word document');
+        setError("Please upload a PDF or Word document");
         setFile(null);
       }
     }
@@ -58,68 +64,71 @@ export default function CVUpload() {
     setNoMatches(false);
 
     // Show initial loading message
-    await sendMessage('CV-г боловсруулж байна. Түр хүлээнэ үү...');
+    await sendMessage("CV-г боловсруулж байна. Түр хүлээнэ үү...");
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     try {
       // Upload CV and get analysis
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const response = await fetch("/api/upload", {
+        method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to upload CV');
+        throw new Error(data.error || "Failed to upload CV");
       }
 
-      if (!data.analysis) {
-        throw new Error('CV analysis failed');
+      if (!data.success || !data.analysis) {
+        throw new Error("CV analysis failed");
       }
+
+      // Set the analysis state
+      setAnalysis(data.analysis);
 
       // Send the analysis to chat
       await sendMessage(`CV Шинжилгээ:\n\n${data.analysis}`);
-      
+
       // Show loading message for job matches
-      await sendMessage('Ажлын байруудыг хайж байна...');
-      
-      // Calculate job matches in parallel
-      const matchPromise = fetch('/api/jobs/match', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: data.content }),
-      });
+      await sendMessage("Ажлын байруудыг хайж байна...");
 
-      // Wait for job matches
-      const matchResponse = await matchPromise;
-
-      if (!matchResponse.ok) {
-        throw new Error('Failed to calculate job matches');
-      }
-
-      const matches = await matchResponse.json();
-      
-      if (matches.length === 0) {
-        setNoMatches(true);
-        await sendMessage('Уучлаарай, таны CV-тэй тохирох ажлын байр олдсонгүй. Дараах зүйлсийг хийж болно:\n\n1. CV-гээ сайжруулах\n2. Илүү олон ур чадвар нэмэх\n3. Дараа дахин оролдох');
-      } else {
-        setJobMatches(matches);
+      if (data.matches && data.matches.length > 0) {
+        setJobMatches(data.matches);
         // Send job matches to chat
-        const matchesMessage = matches.map((match: JobMatch) => 
-          `Ажлын байр: ${match.job.title}\nКомпани: ${match.job.company}\nТохиролт: ${Math.round(match.matchScore)}%\n\nТохиролтын дэлгэрэнгүй:\n- Туршлага: ${Math.round(match.matchDetails.experience)}%\n- Ур чадвар: ${Math.round(match.matchDetails.skills)}%\n- Боловсрол: ${Math.round(match.matchDetails.education)}%`
-        ).join('\n\n');
-        await sendMessage(`Таны CV-тэй тохирох ажлын байрууд:\n\n${matchesMessage}`);
+        const matchesMessage = data.matches
+          .map(
+            (match: JobMatch) =>
+              `Ажлын байр: ${match.job.title}\nКомпани: ${
+                match.job.company.name
+              }\nТохиролт: ${Math.round(
+                match.matchScore
+              )}%\n\nТохиролтын дэлгэрэнгүй:\n- Туршлага: ${Math.round(
+                match.matchDetails.experience
+              )}%\n- Ур чадвар: ${Math.round(
+                match.matchDetails.skills
+              )}%\n- Боловсрол: ${Math.round(match.matchDetails.education)}%`
+          )
+          .join("\n\n");
+        await sendMessage(
+          `Таны CV-тэй тохирох ажлын байрууд:\n\n${matchesMessage}`
+        );
+      } else {
+        setNoMatches(true);
+        await sendMessage(
+          "Уучлаарай, таны CV-тэй тохирох ажлын байр олдсонгүй. Дараах зүйлсийг хийж болно:\n\n1. CV-гээ сайжруулах\n2. Илүү олон ур чадвар нэмэх\n3. Дараа дахин оролдох"
+        );
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to upload CV';
+      console.error("Upload error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to upload CV";
       setError(errorMessage);
-      await sendMessage(`Уучлаарай, CV-г боловсруулахад алдаа гарлаа:\n\n${errorMessage}\n\nДараах зүйлсийг хийж болно:\n1. CV-гээ шалгаад дахин оролдох\n2. Хэдэн минут хүлээгээд дахин оролдох\n3. Чат функцээр CV-гээ дэлгэрэнгүй шинжилгээ хийх`);
+      await sendMessage(
+        `Уучлаарай, CV-г боловсруулахад алдаа гарлаа:\n\n${errorMessage}\n\nДараах зүйлсийг хийж болно:\n1. CV-гээ шалгаад дахин оролдох\n2. Хэдэн минут хүлээгээд дахин оролдох\n3. Чат функцээр CV-гээ дэлгэрэнгүй шинжилгээ хийх`
+      );
     } finally {
       setUploading(false);
     }
@@ -164,20 +173,26 @@ export default function CVUpload() {
           onClick={handleUpload}
           disabled={uploading}
           className={`w-full py-2 px-4 rounded-lg text-white font-medium
-            ${uploading 
-              ? 'bg-blue-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700'}`}
+            ${
+              uploading
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
         >
-          {uploading ? 'Uploading...' : 'Upload CV'}
+          {uploading ? "Uploading..." : "Upload CV"}
         </button>
       )}
 
       {analysis && (
         <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">CV Analysis Results</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            CV Analysis Results
+          </h3>
           <div className="prose prose-sm max-w-none text-black">
-            {analysis.split('\n').map((line, index) => (
-              <p key={index} className="mb-2">{line}</p>
+            {analysis.split("\n").map((line, index) => (
+              <p key={index} className="mb-2">
+                {line}
+              </p>
             ))}
           </div>
         </div>
@@ -185,31 +200,48 @@ export default function CVUpload() {
 
       {noMatches && (
         <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <h3 className="text-lg font-medium text-yellow-800 mb-2">No Matching Jobs Found</h3>
+          <h3 className="text-lg font-medium text-yellow-800 mb-2">
+            No Matching Jobs Found
+          </h3>
           <p className="text-yellow-700">
             We couldn't find any jobs that match your CV. This could be because:
           </p>
           <ul className="list-disc list-inside mt-2 text-yellow-700">
             <li>Your skills might not match current job requirements</li>
             <li>There might not be any relevant jobs posted yet</li>
-            <li>Try updating your CV with more relevant skills and experience</li>
+            <li>
+              Try updating your CV with more relevant skills and experience
+            </li>
           </ul>
         </div>
       )}
 
       {jobMatches.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Job Matches</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Job Matches
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {jobMatches.map((match) => (
-              <div key={match.job.id} className="bg-white shadow rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+              <div
+                key={match.job.id}
+                className="bg-white shadow rounded-lg p-4 hover:shadow-md transition-shadow duration-200"
+              >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900 line-clamp-1">{match.job.title}</h4>
-                    <p className="text-md text-gray-600 line-clamp-1">{match.job.company}</p>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-1">{match.job.location}</p>
+                    <h4 className="text-lg font-semibold text-gray-900 line-clamp-1">
+                      {match.job.title}
+                    </h4>
+                    <p className="text-md text-gray-600 line-clamp-1">
+                      {match.job.company.name}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-1">
+                      {match.job.location}
+                    </p>
                     {match.job.salary && (
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-1">{match.job.salary}</p>
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-1">
+                        {match.job.salary}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center">
@@ -225,12 +257,14 @@ export default function CVUpload() {
                     <span className="text-sm text-gray-600">Experience</span>
                     <div className="flex items-center">
                       <div className="w-24 bg-gray-200 rounded-full h-2.5">
-                        <div 
-                          className="bg-blue-600 h-2.5 rounded-full" 
+                        <div
+                          className="bg-blue-600 h-2.5 rounded-full"
                           style={{ width: `${match.matchDetails.experience}%` }}
                         ></div>
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">{Math.round(match.matchDetails.experience)}%</span>
+                      <span className="ml-2 text-sm text-gray-600">
+                        {Math.round(match.matchDetails.experience)}%
+                      </span>
                     </div>
                   </div>
 
@@ -238,12 +272,14 @@ export default function CVUpload() {
                     <span className="text-sm text-gray-600">Skills</span>
                     <div className="flex items-center">
                       <div className="w-24 bg-gray-200 rounded-full h-2.5">
-                        <div 
-                          className="bg-blue-600 h-2.5 rounded-full" 
+                        <div
+                          className="bg-blue-600 h-2.5 rounded-full"
                           style={{ width: `${match.matchDetails.skills}%` }}
                         ></div>
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">{Math.round(match.matchDetails.skills)}%</span>
+                      <span className="ml-2 text-sm text-gray-600">
+                        {Math.round(match.matchDetails.skills)}%
+                      </span>
                     </div>
                   </div>
 
@@ -251,12 +287,14 @@ export default function CVUpload() {
                     <span className="text-sm text-gray-600">Education</span>
                     <div className="flex items-center">
                       <div className="w-24 bg-gray-200 rounded-full h-2.5">
-                        <div 
-                          className="bg-blue-600 h-2.5 rounded-full" 
+                        <div
+                          className="bg-blue-600 h-2.5 rounded-full"
                           style={{ width: `${match.matchDetails.education}%` }}
                         ></div>
                       </div>
-                      <span className="ml-2 text-sm text-gray-600">{Math.round(match.matchDetails.education)}%</span>
+                      <span className="ml-2 text-sm text-gray-600">
+                        {Math.round(match.matchDetails.education)}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -267,4 +305,4 @@ export default function CVUpload() {
       )}
     </div>
   );
-} 
+}

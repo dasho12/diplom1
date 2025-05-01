@@ -1,11 +1,13 @@
-'use client';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+"use client";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface Job {
   id: string;
   title: string;
-  company: string;
+  company: {
+    name: string;
+  };
   description: string;
   requirements: string;
   location: string;
@@ -24,16 +26,16 @@ export default function JobsList() {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/jobs');
+      const response = await fetch("/api/jobs");
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch jobs');
+        throw new Error(data.error || "Failed to fetch jobs");
       }
 
       setJobs(data);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch jobs');
+      setError(error instanceof Error ? error.message : "Failed to fetch jobs");
     } finally {
       setLoading(false);
     }
@@ -71,28 +73,40 @@ export default function JobsList() {
           <div className="bg-white shadow rounded-lg p-4 hover:shadow-md transition-shadow duration-200 cursor-pointer">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{job.title}</h3>
-                <p className="text-md text-gray-600 line-clamp-1">{job.company}</p>
-                <p className="text-sm text-gray-500 mt-1 line-clamp-1">{job.location}</p>
+                <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
+                  {job.title}
+                </h3>
+                <p className="text-md text-gray-600 line-clamp-1">
+                  {job.company.name}
+                </p>
+                <p className="text-sm text-gray-500 mt-1 line-clamp-1">
+                  {job.location}
+                </p>
                 {job.salary && (
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-1">{job.salary}</p>
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-1">
+                    {job.salary}
+                  </p>
                 )}
               </div>
               <div className="text-xs text-gray-500">
                 {new Date(job.createdAt).toLocaleDateString()}
               </div>
             </div>
-            
+
             <div className="mt-3">
-              <p className="text-sm text-gray-600 line-clamp-2">{job.description}</p>
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {job.description}
+              </p>
             </div>
-            
+
             <div className="mt-3">
-              <p className="text-sm text-gray-600 line-clamp-2">{job.requirements}</p>
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {job.requirements}
+              </p>
             </div>
           </div>
         </Link>
       ))}
     </div>
   );
-} 
+}

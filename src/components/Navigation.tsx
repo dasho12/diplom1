@@ -5,6 +5,58 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 
+const EmployerMenu = () => (
+  <>
+    <Link
+      href="/employer/profile"
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Миний профайл
+    </Link>
+    <Link
+      href="/employer/post-job"
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Ажлын байр нийтлэх
+    </Link>
+    <Link
+      href="/employer/jobs"
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Ажлын байрууд
+    </Link>
+    <Link
+      href="/employer/applications"
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Анкетууд
+    </Link>
+  </>
+);
+
+const UserMenu = () => (
+  <>
+    <Link
+      href="/profile"
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Миний профайл
+    </Link>
+    <Link
+      href="/my-cv"
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Миний CV
+    </Link>
+    <Link
+      href="/applications"
+      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+    >
+      Өргөдлүүд
+    </Link>
+  </>
+);
+
 export const Header = () => {
   const { data: session, status } = useSession();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -17,6 +69,8 @@ export const Header = () => {
   const closeMenu = () => {
     setShowProfileMenu(false);
   };
+
+  const isEmployer = session?.user?.role === "EMPLOYER";
 
   return (
     <header className="flex flex-col justify-center px-32 py-3 w-full bg-white min-h-[70px] shadow-[0_2px_10px_rgba(0,0,0,0.1)] max-md:px-5 max-md:max-w-full fixed top-0 z-50">
@@ -68,12 +122,14 @@ export const Header = () => {
           />
         </Link>
         <div className="flex gap-4 items-center text-sm min-w-60">
-          <Link
-            href="/employer"
-            className="gap-2.5 self-stretch px-4 py-2 my-auto font-medium rounded-lg border border-solid border-slate-900 text-slate-900 hover:bg-slate-50 transition-colors"
-          >
-            Ажил олгогч
-          </Link>
+          {!isEmployer && (
+            <Link
+              href="/employer/register"
+              className="gap-2.5 self-stretch px-4 py-2 my-auto font-medium rounded-lg border border-solid border-slate-900 text-slate-900 hover:bg-slate-50 transition-colors"
+            >
+              Ажил олгогч
+            </Link>
+          )}
 
           {status === "authenticated" && session ? (
             <div className="relative">
@@ -86,6 +142,11 @@ export const Header = () => {
                     session.user?.email?.[0]?.toUpperCase() ||
                     "U"}
                 </div>
+                {isEmployer && (
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                    Ажил олгогч
+                  </span>
+                )}
               </button>
 
               {showProfileMenu && (
@@ -96,26 +157,22 @@ export const Header = () => {
                       <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-200">
                         {session.user?.email}
                       </div>
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={closeMenu}
-                      >
-                        Профайл
-                      </Link>
-                      <Link
-                        href="/settings"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={closeMenu}
-                      >
-                        Тохиргоо
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100"
-                      >
-                        Гарах
-                      </button>
+                      {isEmployer ? <EmployerMenu /> : <UserMenu />}
+                      <div className="border-t border-gray-200">
+                        <Link
+                          href="/settings"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={closeMenu}
+                        >
+                          Тохиргоо
+                        </Link>
+                        <button
+                          onClick={handleSignOut}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-gray-100"
+                        >
+                          Гарах
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>

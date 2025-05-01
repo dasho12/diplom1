@@ -22,6 +22,9 @@ export default async function JobPage({ params }: JobPageProps) {
     where: {
       id: params.id,
     },
+    include: {
+      company: true,
+    },
   });
 
   if (!job) {
@@ -35,7 +38,7 @@ export default async function JobPage({ params }: JobPageProps) {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
-              <p className="text-xl text-gray-600 mt-1">{job.company}</p>
+              <p className="text-xl text-gray-600 mt-1">{job.company.name}</p>
               <p className="text-sm text-gray-500 mt-2">{job.location}</p>
               {job.salary && (
                 <p className="text-sm text-gray-500 mt-1">{job.salary}</p>
