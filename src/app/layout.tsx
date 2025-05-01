@@ -19,8 +19,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Header />
         <AuthProvider>
+          <Header />
           <ChatProvider>{children}</ChatProvider>
         </AuthProvider>
       </body>
