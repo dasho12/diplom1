@@ -1,9 +1,9 @@
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import Navigation from '@/components/Navigation';
-import BackButton from '@/components/BackButton';
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+import BackButton from "@/components/BackButton";
 
 interface JobPageProps {
   params: {
@@ -15,22 +15,21 @@ export default async function JobPage({ params }: JobPageProps) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const job = await prisma.job.findUnique({
     where: {
-      id: params.id
-    }
+      id: params.id,
+    },
   });
 
   if (!job) {
-    redirect('/jobs');
+    redirect("/jobs");
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
       <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex justify-between items-start">
@@ -49,12 +48,18 @@ export default async function JobPage({ params }: JobPageProps) {
 
           <div className="mt-8">
             <h2 className="text-lg font-semibold text-gray-900">Description</h2>
-            <p className="mt-2 text-gray-600 whitespace-pre-wrap">{job.description}</p>
+            <p className="mt-2 text-gray-600 whitespace-pre-wrap">
+              {job.description}
+            </p>
           </div>
 
           <div className="mt-8">
-            <h2 className="text-lg font-semibold text-gray-900">Requirements</h2>
-            <p className="mt-2 text-gray-600 whitespace-pre-wrap">{job.requirements}</p>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Requirements
+            </h2>
+            <p className="mt-2 text-gray-600 whitespace-pre-wrap">
+              {job.requirements}
+            </p>
           </div>
 
           <div className="mt-8">
@@ -64,4 +69,4 @@ export default async function JobPage({ params }: JobPageProps) {
       </main>
     </div>
   );
-} 
+}

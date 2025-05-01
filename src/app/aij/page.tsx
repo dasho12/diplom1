@@ -1,10 +1,10 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import JobInput from "@/components/JobInput";
-import JobsList from "@/components/JobsList";
+import CVUpload from "@/components/CVUpload";
+import Chat from "@/components/Chat";
 
-export default async function JobsPage() {
+export default async function Home() {
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -16,30 +16,22 @@ export default async function JobsPage() {
       <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Job Management
+            CV Analysis Tool
           </h1>
           <p className="text-lg text-gray-600">
-            Post new jobs and view all posted positions
+            Upload your CV and get instant analysis using AI
           </p>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Post a New Job
-              </h2>
-              <JobInput />
-            </div>
+            <h2 className="text-xl font-semibold mb-4">Upload Your CV</h2>
+            <CVUpload />
           </div>
-
           <div>
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Posted Jobs
-              </h2>
-              <JobsList />
-            </div>
+            <h2 className="text-xl font-semibold mb-4">
+              Chat with CV Assistant
+            </h2>
+            <Chat />
           </div>
         </div>
       </main>

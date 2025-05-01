@@ -1,61 +1,56 @@
-'use client';
-import Link from 'next/link';
-import { useSession, signOut } from 'next-auth/react';
-
-export default function Navigation() {
-  const { data: session } = useSession();
-
+import Image from "next/image";
+export const Header = () => {
   return (
-    <nav className="bg-white shadow">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-gray-800">
-                CV Analyzer
-              </Link>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
-                href="/"
-                className="inline-flex items-center px-1 pt-1 text-gray-900 hover:text-gray-500"
-              >
-                Home
-              </Link>
-              {session && (
-                <>
-                  <Link
-                    href="/jobs"
-                    className="inline-flex items-center px-1 pt-1 text-gray-900 hover:text-gray-500"
-                  >
-                    Post Job
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center">
-            {session ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700">{session.user?.name}</span>
-                <button
-                  onClick={() => signOut()}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                Sign In
-              </Link>
-            )}
+    <header className="flex flex-col justify-center px-32 py-3 w-full bg-white min-h-[70px] shadow-[0_2px_10px_rgba(0,0,0,0.1)] max-md:px-5 max-md:max-w-full fixed top-0 z-50">
+      <nav className="flex flex-wrap gap-8 justify-between items-center w-full max-w-[1420px] mx-auto max-md:max-w-full">
+        <div className="flex flex-wrap gap-8 items-center min-w-60 text-slate-900 max-md:max-w-full">
+          <h1 className="text-2xl font-bold tracking-tight">Talento</h1>
+          <div className="flex gap-8 items-center text-sm font-medium min-w-60">
+            <a
+              href="/"
+              className="hover:text-slate-700 cursor-pointer relative group text-slate-900"
+            >
+              <span className="group-hover:text-slate-700 transition-colors">
+                Нүүр
+              </span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-slate-900 transition-all duration-300 group-hover:w-full"></div>
+            </a>
+            <a
+              href="/jobs"
+              className="hover:text-slate-700 cursor-pointer relative group text-slate-900"
+            >
+              <span className="group-hover:text-slate-700 transition-colors">
+                Ажлын байр
+              </span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-slate-900 transition-all duration-300 group-hover:w-full"></div>
+            </a>
+            <a
+              href="#about"
+              className="hover:text-slate-700 cursor-pointer relative group text-slate-900"
+            >
+              <span className="group-hover:text-slate-700 transition-colors">
+                Таленто гэж юу вэ?
+              </span>
+              <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-slate-900 transition-all duration-300 group-hover:w-full"></div>
+            </a>
           </div>
         </div>
-      </div>
-    </nav>
+        <Image
+          src="/icons/AI.png"
+          alt="logo"
+          width={40}
+          height={40}
+          className="rounded-lg"
+        />
+        <div className="flex gap-4 items-center text-sm min-w-60">
+          <button className="gap-2.5 self-stretch px-4 py-2 my-auto font-medium rounded-lg border border-solid border-slate-900 text-slate-900 hover:bg-slate-50 transition-colors">
+            Ажил олгогч
+          </button>
+          <button className="gap-2.5 self-stretch px-4 py-2 my-auto font-bold text-white whitespace-nowrap rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors">
+            Нэвтрэх
+          </button>
+        </div>
+      </nav>
+    </header>
   );
-} 
+};

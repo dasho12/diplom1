@@ -14,6 +14,9 @@ importers:
       '@prisma/client':
         specifier: ^6.6.0
         version: 6.6.0(prisma@6.6.0(typescript@5.8.3))(typescript@5.8.3)
+      '@splinetool/react-spline':
+        specifier: ^4.0.0
+        version: 4.0.0(@splinetool/runtime@1.9.89)(next@15.3.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@types/multer':
         specifier: ^1.4.12
         version: 1.4.12
@@ -67,8 +70,8 @@ importers:
         specifier: ^4
         version: 4.1.4
       '@types/node':
-        specifier: ^20
-        version: 20.17.30
+        specifier: ^20.17.31
+        version: 20.17.32
       '@types/react':
         specifier: ^19
         version: 19.1.2
@@ -86,9 +89,9 @@ importers:
         version: 4.1.4
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@20.17.30)(typescript@5.8.3)
+        version: 10.9.2(@types/node@20.17.32)(typescript@5.8.3)
       typescript:
-        specifier: ^5
+        specifier: ^5.8.3
         version: 5.8.3
 
 packages:
@@ -567,6 +570,20 @@ packages:
   '@rushstack/eslint-patch@1.11.0':
     resolution: {integrity: sha512-zxnHvoMQVqewTJr/W4pKjF0bMGiKJv1WX7bSrkl46Hg0QjESbzBROWK0Wg4RphzSOS5Jiy7eFimmM3UgMrMZbQ==}
 
+  '@splinetool/react-spline@4.0.0':
+    resolution: {integrity: sha512-FqrV7/K2q998Y0t83QUauQxsifKWAg9CFZoSb64qRuH7IfHkDs5/OgU1ACkg0aTgsEPtFlH+kATQ+8X6MrizHQ==}
+    peerDependencies:
+      '@splinetool/runtime': '*'
+      next: '>=14.2.0'
+      react: '*'
+      react-dom: '*'
+    peerDependenciesMeta:
+      next:
+        optional: true
+
+  '@splinetool/runtime@1.9.89':
+    resolution: {integrity: sha512-BcO4eLh5S4sOhsfGSTKg5adYoT83alPf+8eoMFwQTE1LqW/4qnrijENYoKarOjC5ei1XV9EXd4h8tDUg/NaMww==}
+
   '@swc/counter@0.1.3':
     resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
 
@@ -712,8 +729,8 @@ packages:
   '@types/node@18.19.86':
     resolution: {integrity: sha512-fifKayi175wLyKyc5qUfyENhQ1dCNI1UNjp653d8kuYcPQN5JhX3dGuP/XmvPTg/xRBn1VTLpbmi+H/Mr7tLfQ==}
 
-  '@types/node@20.17.30':
-    resolution: {integrity: sha512-7zf4YyHA+jvBNfVrk2Gtvs6x7E8V+YDW05bNfG2XkWDJfYRXrTiP/DsB2zSYTaHX0bGIujTBQdMVAhb+j7mwpg==}
+  '@types/node@20.17.32':
+    resolution: {integrity: sha512-zeMXFn8zQ+UkjK4ws0RiOC9EWByyW1CcVmLe+2rQocXRsGEDxUCwPEIVgpsGcLHS/P8JkT0oa3839BRABS0oPw==}
 
   '@types/node@22.14.1':
     resolution: {integrity: sha512-u0HuPQwe/dHrItgHHpmw3N2fYCR6x4ivMNbPHRkBVP4CvN+kiRrKHWk3i8tXiO/joPwXLMYvF9TTF0eqgHIuOw==}
@@ -1008,6 +1025,9 @@ packages:
 
   bluebird@3.4.7:
     resolution: {integrity: sha512-iD3898SR7sWVRHbiQv+sHUtHnMvC1o3nW5rAcqnq3uOn07DSAppZYUkIGslDz6gXC7HfunPe7YVBgoEJASPcHA==}
+
+  blurhash@2.0.5:
+    resolution: {integrity: sha512-cRygWd7kGBQO3VEhPiTgq4Wc43ctsM+o46urrmPOiuAe+07fzlSB9OJVdpgDL0jPqXUVQ9ht7aq7kxOeJHRK+w==}
 
   brace-expansion@1.1.11:
     resolution: {integrity: sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==}
@@ -1811,6 +1831,9 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
+  lodash.debounce@4.0.8:
+    resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
+
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
@@ -2075,6 +2098,10 @@ packages:
     resolution: {integrity: sha512-y0W+X7Ppo7oZX6eovsRkuzcSM40Bicg2JEJkDJ4irIt1wsYAP5MLSNv+QAogO8xivMffw/9OvV3um1pxXgt1uA==}
     engines: {node: ^10.13.0 || >=12.0.0}
 
+  on-change@4.0.2:
+    resolution: {integrity: sha512-cMtCyuJmTx/bg2HCpHo3ZLeF7FZnBOapLqZHr2AlLeJ5Ul0Zu2mUJJz051Fdwu/Et2YW04ZD+TtU+gVy0ACNCA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
@@ -2215,6 +2242,9 @@ packages:
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
+  react-merge-refs@2.1.1:
+    resolution: {integrity: sha512-jLQXJ/URln51zskhgppGJ2ub7b2WFKGq3cl3NYKtlHoTG+dN2q7EzWrn3hN3EgPsTMvpR9tpq5ijdp7YwFZkag==}
+
   react@19.1.0:
     resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
     engines: {node: '>=0.10.0'}
@@ -2285,6 +2315,9 @@ packages:
 
   scheduler@0.26.0:
     resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
+
+  semver-compare@1.0.0:
+    resolution: {integrity: sha512-YM3/ITh2MJ5MtzaM429anh+x2jiLVjqILF4m4oyQB18W7Ggea7BfqdH/wGMK7dDiMghv/6WG7znWMwUDzJiXow==}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -2446,6 +2479,9 @@ packages:
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
+
+  thumbhash@0.1.1:
+    resolution: {integrity: sha512-kH5pKeIIBPQXAOni2AiY/Cu/NKdkFREdpH+TLdM0g6WA7RriCv0kPLgP731ady67MhTAqrVG/4mnEeibVuCJcg==}
 
   tinyglobby@0.2.13:
     resolution: {integrity: sha512-mEwzpUgrLySlveBwEVDMKk5B57bhLPYovRfPAXD5gA/98Opn0rCDj3GtLwFvCvH5RK9uPCExUROW5NjDwvqkxw==}
@@ -2989,6 +3025,23 @@ snapshots:
 
   '@rushstack/eslint-patch@1.11.0': {}
 
+  '@splinetool/react-spline@4.0.0(@splinetool/runtime@1.9.89)(next@15.3.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@splinetool/runtime': 1.9.89
+      blurhash: 2.0.5
+      lodash.debounce: 4.0.8
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-merge-refs: 2.1.1
+      thumbhash: 0.1.1
+    optionalDependencies:
+      next: 15.3.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+
+  '@splinetool/runtime@1.9.89':
+    dependencies:
+      on-change: 4.0.2
+      semver-compare: 1.0.0
+
   '@swc/counter@0.1.3': {}
 
   '@swc/helpers@0.5.15':
@@ -3077,17 +3130,17 @@ snapshots:
   '@types/body-parser@1.19.5':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
 
   '@types/estree@1.0.7': {}
 
   '@types/express-serve-static-core@5.0.6':
     dependencies:
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
       '@types/qs': 6.9.18
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
@@ -3112,14 +3165,14 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
       form-data: 4.0.2
 
   '@types/node@18.19.86':
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@20.17.30':
+  '@types/node@20.17.32':
     dependencies:
       undici-types: 6.19.8
 
@@ -3129,7 +3182,7 @@ snapshots:
 
   '@types/pdf-parse@1.1.5':
     dependencies:
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
 
   '@types/qs@6.9.18': {}
 
@@ -3146,12 +3199,12 @@ snapshots:
   '@types/send@0.17.4':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
       '@types/send': 0.17.4
 
   '@types/webidl-conversions@7.0.3': {}
@@ -3438,6 +3491,8 @@ snapshots:
   bcryptjs@3.0.2: {}
 
   bluebird@3.4.7: {}
+
+  blurhash@2.0.5: {}
 
   brace-expansion@1.1.11:
     dependencies:
@@ -4442,6 +4497,8 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
+  lodash.debounce@4.0.8: {}
+
   lodash.merge@4.6.2: {}
 
   loose-envify@1.4.0:
@@ -4703,6 +4760,8 @@ snapshots:
 
   oidc-token-hash@5.1.0: {}
 
+  on-change@4.0.2: {}
+
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
@@ -4844,6 +4903,8 @@ snapshots:
 
   react-is@16.13.1: {}
 
+  react-merge-refs@2.1.1: {}
+
   react@19.1.0: {}
 
   readable-stream@2.3.8:
@@ -4936,6 +4997,8 @@ snapshots:
   sax@1.4.1: {}
 
   scheduler@0.26.0: {}
+
+  semver-compare@1.0.0: {}
 
   semver@6.3.1: {}
 
@@ -5157,6 +5220,8 @@ snapshots:
       yallist: 4.0.0
     optional: true
 
+  thumbhash@0.1.1: {}
+
   tinyglobby@0.2.13:
     dependencies:
       fdir: 6.4.4(picomatch@4.0.2)
@@ -5176,14 +5241,14 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  ts-node@10.9.2(@types/node@20.17.30)(typescript@5.8.3):
+  ts-node@10.9.2(@types/node@20.17.32)(typescript@5.8.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.17.30
+      '@types/node': 20.17.32
       acorn: 8.14.1
       acorn-walk: 8.3.4
       arg: 4.1.3
