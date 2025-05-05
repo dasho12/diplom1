@@ -1,4 +1,4 @@
-import Spline from "@splinetool/react-spline/next";
+
 import { HeroSection } from "../components/HeroSection";
 import ProcessSection from "../components/ProcessSection";
 import { Footer } from "../components/Footer";
