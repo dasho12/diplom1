@@ -6,6 +6,73 @@ import { JobListing } from "./types";
 export const JobCard = ({ title, type, salary, company }: JobListing) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Get color scheme based on job type
+  const getColorScheme = (jobType: string) => {
+    const typeLower = jobType.toLowerCase();
+
+    if (typeLower.includes("программист") || typeLower.includes("developer")) {
+      return {
+        gradient: "from-gray-800 to-gray-900",
+        badge: "from-gray-800 to-gray-900",
+        icon: "text-gray-800",
+        button: "from-gray-800 to-gray-900",
+        salary: "bg-gray-100 text-gray-900",
+        logo: "from-gray-800 to-gray-900",
+      };
+    }
+    if (typeLower.includes("дизайнер") || typeLower.includes("designer")) {
+      return {
+        gradient: "from-gray-700 to-gray-800",
+        badge: "from-gray-700 to-gray-800",
+        icon: "text-gray-700",
+        button: "from-gray-700 to-gray-800",
+        salary: "bg-gray-100 text-gray-800",
+        logo: "from-gray-700 to-gray-800",
+      };
+    }
+    if (typeLower.includes("менежер") || typeLower.includes("manager")) {
+      return {
+        gradient: "from-gray-600 to-gray-700",
+        badge: "from-gray-600 to-gray-700",
+        icon: "text-gray-600",
+        button: "from-gray-600 to-gray-700",
+        salary: "bg-gray-100 text-gray-700",
+        logo: "from-gray-600 to-gray-700",
+      };
+    }
+    if (typeLower.includes("инженер") || typeLower.includes("engineer")) {
+      return {
+        gradient: "from-gray-500 to-gray-600",
+        badge: "from-gray-500 to-gray-600",
+        icon: "text-gray-500",
+        button: "from-gray-500 to-gray-600",
+        salary: "bg-gray-100 text-gray-600",
+        logo: "from-gray-500 to-gray-600",
+      };
+    }
+    if (typeLower.includes("маркетинг") || typeLower.includes("marketing")) {
+      return {
+        gradient: "from-gray-400 to-gray-500",
+        badge: "from-gray-400 to-gray-500",
+        icon: "text-gray-400",
+        button: "from-gray-400 to-gray-500",
+        salary: "bg-gray-100 text-gray-500",
+        logo: "from-gray-400 to-gray-500",
+      };
+    }
+    // Default color scheme
+    return {
+      gradient: "from-gray-900 to-black",
+      badge: "from-gray-900 to-black",
+      icon: "text-gray-900",
+      button: "from-gray-900 to-black",
+      salary: "bg-gray-100 text-gray-900",
+      logo: "from-gray-900 to-black",
+    };
+  };
+
+  const colors = getColorScheme(title);
+
   return (
     <article
       className={`relative overflow-hidden bg-white rounded-xl shadow-md transition-all duration-300 ${
@@ -14,27 +81,37 @@ export const JobCard = ({ title, type, salary, company }: JobListing) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+      <div
+        className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${colors.gradient}`}
+      ></div>
 
       <div className="p-6">
         <div className="flex flex-col">
           <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
           <div className="flex flex-wrap gap-2 items-center mb-4">
-            <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+            <span
+              className={`px-3 py-1 text-sm font-medium text-white bg-gradient-to-r ${colors.badge} rounded-full`}
+            >
               {type}
             </span>
-            <span className="text-sm text-gray-600">{salary}</span>
+            <span className={`text-sm px-3 py-1 rounded-full ${colors.salary}`}>
+              {salary}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center pt-4 border-t border-gray-100">
           <div className="relative mr-4">
-            <img
-              src={company.logo}
-              className="w-12 h-12 object-contain rounded-lg bg-gray-50 p-1"
-              alt={company.name}
-            />
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+            <div
+              className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colors.logo} p-1`}
+            >
+              <img
+                src={company.logo}
+                className="w-full h-full object-contain rounded-lg bg-white"
+                alt={company.name}
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-800 rounded-full border-2 border-white"></div>
           </div>
 
           <div className="flex-1">
@@ -43,7 +120,7 @@ export const JobCard = ({ title, type, salary, company }: JobListing) => {
             </h4>
             <div className="flex items-center mt-1 text-sm text-gray-500">
               <svg
-                className="w-4 h-4 mr-1 text-gray-400"
+                className={`w-4 h-4 mr-1 ${colors.icon}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -69,7 +146,7 @@ export const JobCard = ({ title, type, salary, company }: JobListing) => {
           <button
             className={`ml-4 p-2 rounded-full transition-colors duration-300 ${
               isHovered
-                ? "bg-blue-50 text-blue-600"
+                ? `bg-gradient-to-r ${colors.button} text-white`
                 : "text-gray-400 hover:text-gray-600"
             }`}
             aria-label="Bookmark job"

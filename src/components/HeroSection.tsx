@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import type { StatCard } from "./types";
 import Spline from "@splinetool/react-spline";
@@ -26,7 +26,7 @@ const MONGOLIA_PROVINCES = [
   "Ховд",
   "Хөвсгөл",
   "Хэнтий",
-  "Улаанбаатар"
+  "Улаанбаатар",
 ];
 
 const stats: StatCard[] = [
@@ -76,22 +76,25 @@ export const HeroSection = () => {
   const handleSearch = () => {
     const queryParams = new URLSearchParams();
     if (searchTerm) {
-      queryParams.set('search', searchTerm);
+      queryParams.set("search", searchTerm);
     }
     if (selectedCity) {
-      queryParams.set('city', selectedCity);
+      queryParams.set("city", selectedCity);
     }
     router.push(`/jobs?${queryParams.toString()}`);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
 
   return (
-    <section className="w-full min-h-screen self-center px-32  w-full max-md:pt-10 max-md:max-w-full relative">
+    <section
+      className="w-full min-h-screen self-center px-32  w-full max-md:pt-10 max-md:max-w-full relative
+    "
+    >
       {/* Spline background */}
       <div className="container mx-auto ">
         <div className="flex flex-col lg:flex-row items-center justify-between min-h-screen gap-20">
@@ -127,7 +130,7 @@ export const HeroSection = () => {
                   </option>
                 ))}
               </select>
-              <button 
+              <button
                 onClick={handleSearch}
                 className="flex overflow-hidden gap-2.5 items-center self-stretch p-5 my-auto rounded-xl bg-slate-900 h-[60px] w-[60px]"
               >
