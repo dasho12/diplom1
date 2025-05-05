@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface JobFormData {
   title: string;
@@ -13,6 +14,7 @@ interface JobFormData {
 
 export default function JobInput() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -40,29 +42,48 @@ export default function JobInput() {
     setSuccess(false);
 
     try {
-      const response = await fetch('/api/jobs', {
+      // First create or get company
+      const companyResponse = await fetch('/api/companies', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.company,
+          location: formData.location
+        }),
       });
 
-      const data = await response.json();
+      if (!companyResponse.ok) {
+        throw new Error('Failed to create company');
+      }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create job');
+      const companyData = await companyResponse.json();
+
+      // Then create job with company ID
+      const jobResponse = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          companyId: companyData.id,
+          description: formData.description,
+          requirements: formData.requirements,
+          location: formData.location,
+          salary: formData.salary
+        }),
+      });
+
+      if (!jobResponse.ok) {
+        throw new Error('Failed to create job');
       }
 
       setSuccess(true);
-      setFormData({
-        title: '',
-        company: '',
-        description: '',
-        requirements: '',
-        location: '',
-        salary: ''
-      });
+      setTimeout(() => {
+        router.push('/jobs');
+      }, 1000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to create job');
     } finally {
@@ -73,7 +94,7 @@ export default function JobInput() {
   if (!session) {
     return (
       <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        Please sign in to post a job
+        Ажлын байр оруулахын тулд нэвтрэх шаардлагатай
       </div>
     );
   }
@@ -82,7 +103,7 @@ export default function JobInput() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-          Job Title
+          Ажлын байрны нэр
         </label>
         <input
           type="text"
@@ -92,13 +113,13 @@ export default function JobInput() {
           value={formData.title}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="e.g. Senior Software Engineer"
+          placeholder="Жишээ: Ахлах программист"
         />
       </div>
 
       <div>
         <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-          Company Name
+          Компанийн нэр
         </label>
         <input
           type="text"
@@ -108,13 +129,13 @@ export default function JobInput() {
           value={formData.company}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="e.g. Tech Corp"
+          placeholder="Жишээ: Tech Corp"
         />
       </div>
 
       <div>
         <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-          Job Description
+          Ажлын байрны тайлбар
         </label>
         <textarea
           id="description"
@@ -124,13 +145,13 @@ export default function JobInput() {
           onChange={handleChange}
           rows={4}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="Describe the job role and responsibilities..."
+          placeholder="Ажлын байрны үүрэг, хариуцлага..."
         />
       </div>
 
       <div>
         <label htmlFor="requirements" className="block text-sm font-medium text-gray-700">
-          Requirements
+          Шаардлага
         </label>
         <textarea
           id="requirements"
@@ -140,13 +161,13 @@ export default function JobInput() {
           onChange={handleChange}
           rows={4}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="List the required skills, experience, and qualifications..."
+          placeholder="Шаардлагатай ур чадвар, туршлага, мэргэжлийн зэрэг..."
         />
       </div>
 
       <div>
         <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-          Location
+          Байршил
         </label>
         <input
           type="text"
@@ -156,13 +177,13 @@ export default function JobInput() {
           value={formData.location}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="e.g. Ulaanbaatar, Mongolia"
+          placeholder="Жишээ: Улаанбаатар"
         />
       </div>
 
       <div>
         <label htmlFor="salary" className="block text-sm font-medium text-gray-700">
-          Salary Range (Optional)
+          Цалин (Сонголттой)
         </label>
         <input
           type="text"
@@ -171,7 +192,7 @@ export default function JobInput() {
           value={formData.salary}
           onChange={handleChange}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder="e.g. ₮3,500,000 - ₮5,000,000"
+          placeholder="Жишээ: ₮3,500,000 - ₮5,000,000"
         />
       </div>
 
@@ -183,7 +204,7 @@ export default function JobInput() {
 
       {success && (
         <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
-          Job posted successfully!
+          Ажлын байр амжилттай оруулагдлаа!
         </div>
       )}
 
@@ -195,7 +216,7 @@ export default function JobInput() {
             ? 'bg-blue-400 cursor-not-allowed' 
             : 'bg-blue-600 hover:bg-blue-700'}`}
       >
-        {loading ? 'Posting...' : 'Post Job'}
+        {loading ? 'Оруулж байна...' : 'Ажлын байр оруулах'}
       </button>
     </form>
   );

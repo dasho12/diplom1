@@ -1,5 +1,33 @@
+'use client';
+
 import type { StatCard } from "./types";
 import Spline from "@splinetool/react-spline";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+const MONGOLIA_PROVINCES = [
+  "Архангай",
+  "Баян-Өлгий",
+  "Баянхонгор",
+  "Булган",
+  "Говь-Алтай",
+  "Говьсүмбэр",
+  "Дархан-Уул",
+  "Дорноговь",
+  "Дорнод",
+  "Дундговь",
+  "Завхан",
+  "Өвөрхангай",
+  "Өмнөговь",
+  "Сүхбаатар",
+  "Сэлэнгэ",
+  "Төв",
+  "Увс",
+  "Ховд",
+  "Хөвсгөл",
+  "Хэнтий",
+  "Улаанбаатар"
+];
 
 const stats: StatCard[] = [
   {
@@ -41,6 +69,27 @@ const StatCard = ({ icon, value, label }: StatCard) => (
 );
 
 export const HeroSection = () => {
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
+  const handleSearch = () => {
+    const queryParams = new URLSearchParams();
+    if (searchTerm) {
+      queryParams.set('search', searchTerm);
+    }
+    if (selectedCity) {
+      queryParams.set('city', selectedCity);
+    }
+    router.push(`/jobs?${queryParams.toString()}`);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <section className="w-full min-h-screen self-center px-32  w-full max-md:pt-10 max-md:max-w-full relative">
       {/* Spline background */}
@@ -61,17 +110,27 @@ export const HeroSection = () => {
               <input
                 type="text"
                 placeholder="Мэргэжил хайх..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="gap-2.5 self-stretch py-5 pr-24 pl-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-slate-900 text-slate-600 max-md:pr-5"
               />
-              <div className="flex gap-10 items-center self-stretch px-6 py-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-slate-900 min-h-[60px] min-w-60 text-slate-900 w-[250px] max-md:px-5">
-                <span>Хот сонгох</span>
-                <img
-                  src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/98f0d99f296b83c106c4040aee612cb23f980723?placeholderIfAbsent=true"
-                  className="object-contain shrink-0 self-stretch my-auto w-5 aspect-square"
-                  alt=""
-                />
-              </div>
-              <button className="flex overflow-hidden gap-2.5 items-center self-stretch p-5 my-auto rounded-xl bg-slate-900 h-[60px] w-[60px]">
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                className="flex gap-10 items-center self-stretch px-6 py-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-slate-900 min-h-[60px] min-w-60 text-slate-900 w-[250px] max-md:px-5"
+              >
+                <option value="">Бүх хот</option>
+                {MONGOLIA_PROVINCES.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+              <button 
+                onClick={handleSearch}
+                className="flex overflow-hidden gap-2.5 items-center self-stretch p-5 my-auto rounded-xl bg-slate-900 h-[60px] w-[60px]"
+              >
                 <img
                   src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/492220f772f4a785c9d6dff4e5ce3c39ba4e500e?placeholderIfAbsent=true"
                   className="object-contain self-stretch my-auto w-5 aspect-square"
