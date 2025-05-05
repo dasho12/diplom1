@@ -171,7 +171,7 @@ export default function LoginPage() {
           <p className="mt-4 text-center text-sm text-gray-600">
             Бүртгэлгүй юу?{" "}
             <a
-              href="#"
+              href="/jobseeker/register"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
               Бүртгүүлэх
