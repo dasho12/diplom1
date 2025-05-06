@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import type { StatCard } from "./types";
 import Spline from "@splinetool/react-spline";
@@ -26,7 +26,7 @@ const MONGOLIA_PROVINCES = [
   "Ховд",
   "Хөвсгөл",
   "Хэнтий",
-  "Улаанбаатар"
+  "Улаанбаатар",
 ];
 
 const stats: StatCard[] = [
@@ -76,32 +76,39 @@ export const HeroSection = () => {
   const handleSearch = () => {
     const queryParams = new URLSearchParams();
     if (searchTerm) {
-      queryParams.set('search', searchTerm);
+      queryParams.set("search", searchTerm);
     }
     if (selectedCity) {
-      queryParams.set('city', selectedCity);
+      queryParams.set("city", selectedCity);
     }
     router.push(`/jobs?${queryParams.toString()}`);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
 
   return (
-    <section className="w-full min-h-screen self-center px-32  w-full max-md:pt-10 max-md:max-w-full relative">
+    <section
+      className="w-full min-h-screen self-center px-32 w-full max-md:pt-10 max-md:max-w-full relative"
+    >
       {/* Spline background */}
-      <div className="container mx-auto ">
+      <div className="absolute inset-0 z-0">
+        <Spline scene="https://prod.spline.design/hNC5B1RNfKCeT0ny/scene.splinecode" />
+      </div>
+
+      {/* Content container */}
+      <div className="container mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row items-center justify-between min-h-screen gap-20">
           {/* Left side - Text content */}
-          <div className="flex flex-col max-w-full w-[55%]">
-            <div className="w-full  font-semibold  text-slate-900 max-md:max-w-full">
+          <div className="flex flex-col max-w-full w-[55%] relative z-10">
+            <div className="w-full font-semibold text-slate-900 max-md:max-w-full">
               <h2 className="text-5xl leading-[60px] max-md:max-w-full max-md:text-4xl max-md:leading-[52px]">
                 Ажлын байрууд нээлттэй Мөрөөдлийн ажлаа сонгоорой!
               </h2>
-              <p className=" text-base leading-6 max-md:max-w-full">
+              <p className="text-base leading-6 max-md:max-w-full">
                 Амжилттай карьерын эхлэлийг тавих шилдэг ажлыг хайж байна уу?
               </p>
               <p>Энд олон боломж бий !!!</p>
@@ -113,12 +120,12 @@ export const HeroSection = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="gap-2.5 self-stretch py-5 pr-24 pl-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-slate-900 text-slate-600 max-md:pr-5"
+                className="gap-2.5 self-stretch py-5 pr-24 pl-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-slate-900 text-slate-600 max-md:pr-5 bg-white/80 backdrop-blur-sm relative z-10"
               />
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                className="flex gap-10 items-center self-stretch px-6 py-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-slate-900 min-h-[60px] min-w-60 text-slate-900 w-[250px] max-md:px-5"
+                className="flex gap-10 items-center self-stretch px-6 py-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-slate-900 min-h-[60px] min-w-60 text-slate-900 w-[250px] max-md:px-5 bg-white/80 backdrop-blur-sm relative z-10"
               >
                 <option value="">Бүх хот</option>
                 {MONGOLIA_PROVINCES.map((city) => (
@@ -127,9 +134,9 @@ export const HeroSection = () => {
                   </option>
                 ))}
               </select>
-              <button 
+              <button
                 onClick={handleSearch}
-                className="flex overflow-hidden gap-2.5 items-center self-stretch p-5 my-auto rounded-xl bg-slate-900 h-[60px] w-[60px]"
+                className="flex overflow-hidden gap-2.5 items-center self-stretch p-5 my-auto rounded-xl bg-slate-900 h-[60px] w-[60px] hover:bg-slate-800 transition-colors relative z-10"
               >
                 <img
                   src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/492220f772f4a785c9d6dff4e5ce3c39ba4e500e?placeholderIfAbsent=true"
@@ -139,18 +146,11 @@ export const HeroSection = () => {
               </button>
             </div>
           </div>
-
-          {/* Right side - Spline animation */}
-          <div className="w-full lg:w-1/2 h-[500px] lg:h-[600px] relative">
-            <div className="absolute inset-0">
-              <Spline scene="https://prod.spline.design/hNC5B1RNfKCeT0ny/scene.splinecode" />
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Доорх статистикууд */}
-      <div className="flex flex-row gap-6 items-center  max-md:mt-10 max-md:max-w-full">
+      <div className="flex flex-row gap-6 items-center max-md:mt-10 max-md:max-w-full relative z-10">
         {stats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}

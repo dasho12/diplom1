@@ -18,13 +18,12 @@ export default function JobseekerRegisterPage() {
     const data = {
       email: formData.get("email") as string,
       password: formData.get("password") as string,
-      firstName: formData.get("firstName") as string,
-      lastName: formData.get("lastName") as string,
-      phoneNumber: formData.get("phoneNumber") as string, // Optional field
+      name: `${formData.get("firstName")} ${formData.get("lastName")}`.trim(),
+      phoneNumber: formData.get("phoneNumber") as string,
     };
 
     try {
-      const response = await fetch("/api/auth/register/jobseeker", { // Updated endpoint
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
