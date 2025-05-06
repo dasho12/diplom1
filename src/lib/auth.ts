@@ -3,6 +3,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { UserRole } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -12,38 +13,49 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        expectedRole: { label: "Expected Role", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials");
+        console.log("--- Authorize function started ---");
+        const { email, password, expectedRole } = credentials || {};
+
+        if (!email || !password) {
+          console.log("Missing email or password");
+          throw new Error("Имэйл эсвэл нууц үг дутуу байна.");
         }
+        console.log(`Attempting login for: ${email}, expecting role: ${expectedRole || 'any (not specified)'}`);
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            password: true,
-            role: true,
-          },
+          where: { email: email },
+          select: { id: true, email: true, name: true, password: true, role: true },
         });
 
         if (!user || !user.password) {
-          throw new Error("Invalid credentials");
+          console.log(`User not found or password missing for: ${email}`);
+          throw new Error("Имэйл эсвэл нууц үг буруу байна.");
         }
+        console.log(`User found: ${user.email}, Actual Role: ${user.role}`);
 
-        const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        const isCorrectPassword = await bcrypt.compare(password, user.password);
 
         if (!isCorrectPassword) {
-          throw new Error("Invalid credentials");
+          console.log(`Incorrect password for: ${user.email}`);
+          throw new Error("Имэйл эсвэл нууц үг буруу байна.");
+        }
+        console.log(`Password correct for: ${user.email}`);
+
+        if (expectedRole) {
+           console.log(`Checking if actual role '${user.role}' matches expected role '${expectedRole}'`);
+           if (user.role.toString() !== expectedRole) {
+                console.log(`*** ROLE MISMATCH ***: Actual role '${user.role}' does not match expected role '${expectedRole}'. Access denied for ${user.email}.`);
+                throw new Error(`Нэвтрэх эрхгүй байна. (${expectedRole} role шаардлагатай)`);
+           }
+            console.log(`Role check passed: Actual role '${user.role}' matches expected role '${expectedRole}'.`);
+        } else {
+            console.log("No expectedRole specified by frontend, skipping role check.");
         }
 
+        console.log(`Authorization successful for ${user.email} with role ${user.role}.`);
         return {
           id: user.id,
           email: user.email,

@@ -4,14 +4,16 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
+// Frontend-д @prisma/client импортлох шаардлагагүй
+// import { UserRole } from '@prisma/client';
 
-export default function LoginPage() {
+export default function JobSeekerLoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
+    setError(null); // Алдааг арилгах
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
@@ -20,25 +22,28 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email,
         password,
-        expectedRole: "EMPLOYER",
-        redirect: false,
+        expectedRole: "USER",
+        redirect: false, // Backend role шалгалтад найдна
       });
 
+      // Backend-ийн authorize функц role буруу эсвэл нууц үг буруу үед error буцаана
       if (result?.error) {
         setError(
           result.error || "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
         );
-      } else if (result?.ok) {
-        router.push("/employer/dashboard");
+      } else if (result?.ok) { // Амжилттай болсон (backend role-г зөвшөөрсөн)
+        router.push("/"); // Employer dashboard руу чиглүүлэх
       } else {
+         // Бусад тохиолдол (ховор байх)
          setError("Нэвтрэхэд тодорхойгүй алдаа гарлаа.");
       }
     } catch (error: any) {
        console.error("Login error:", error);
-       setError(error.message || "Нэвтрэх үед системийн алдаа гарлаа.");
+       setError(error.message || "Нэвтрэх үед системийн алдаа гарлаа."); // Catch block-ийн алдаа
     }
   };
 
+  // ... үлдсэн JSX код нь Ажил олгогчийн хувилбартай байх ёстой ...
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -54,10 +59,10 @@ export default function LoginPage() {
                 Тусламж
               </button>
               <button
-                onClick={() => router.push("/employer/register")} // Link to employer registration
+                onClick={() => router.push("/jobseeker/register")} // Link to jobseeker registration
                 className="px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
               >
-                Бүртгүүлэх (Ажил олгогч)
+                Бүртгүүлэх (Ажил хайгч)
               </button>
             </div>
           </div>
@@ -68,10 +73,10 @@ export default function LoginPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-            Ажил олгогч нэвтрэх
+            Ажил хайгч нэвтрэх
           </h1>
           <p className="text-center text-gray-600 mb-8">
-            Та өөрийн ажил олгогчийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу
+            Та өөрийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу
           </p>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -99,7 +104,7 @@ export default function LoginPage() {
                   autoComplete="email"
                   required
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="employer@company.com"
+                  placeholder="jobseeker@email.com" // Updated placeholder
                 />
               </div>
 
@@ -139,7 +144,7 @@ export default function LoginPage() {
 
                 <div className="text-sm">
                   <a
-                    href="#" // Update if you have a password reset page for employers
+                    href="#" // Update if you have a password reset page for job seekers
                     className="font-medium text-indigo-600 hover:text-indigo-500"
                   >
                     Нууц үгээ мартсан?
@@ -157,38 +162,41 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Эсвэл</span>
-                </div>
-              </div>
+             {/* Social logins and separator removed */}
+             {/* <div className="mt-6">
+               <div className="relative">
+                 <div className="absolute inset-0 flex items-center">
+                   <div className="w-full border-t border-gray-300"></div>
+                 </div>
+                 <div className="relative flex justify-center text-sm">
+                   <span className="px-2 bg-white text-gray-500">Эсвэл</span>
+                 </div>
+               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  Google
-                </button>
-                <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  Facebook
-                </button>
-              </div>
-            </div>
+               <div className="mt-6 grid grid-cols-2 gap-3">
+                 <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                   Google
+                 </button>
+                 <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                   Facebook
+                 </button>
+               </div>
+             </div> */}
           </div>
 
-          <p className="mt-4 text-center text-sm text-gray-600">
-            Бүртгэлгүй юу?{" "}
-            <a
-              href="/jobseeker/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              Бүртгүүлэх
-            </a>
-          </p>
+           {/* Link to job seeker registration */}
+           <p className="mt-4 text-center text-sm text-gray-600">
+              Бүртгэлгүй юу?{" "}
+              <a
+               href="/jobseeker/register"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+               Бүртгүүлэх
+              </a>
+            </p>
         </div>
       </div>
     </div>
   );
-}
+
+} 
