@@ -26,16 +26,17 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError(
-          result.error || "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
+          result.error ||
+            "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
         );
       } else if (result?.ok) {
-        router.push("/employer/dashboard");
+        router.push("/");
       } else {
-         setError("Нэвтрэхэд тодорхойгүй алдаа гарлаа.");
+        setError("Нэвтрэхэд тодорхойгүй алдаа гарлаа.");
       }
     } catch (error: any) {
-       console.error("Login error:", error);
-       setError(error.message || "Нэвтрэх үед системийн алдаа гарлаа.");
+      console.error("Login error:", error);
+      setError(error.message || "Нэвтрэх үед системийн алдаа гарлаа.");
     }
   };
 
