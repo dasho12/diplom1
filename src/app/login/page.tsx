@@ -20,7 +20,7 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email,
         password,
-        expectedRole: "USER",
+        expectedRole: "EMPLOYER",
         redirect: false,
       });
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
           result.error || "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
         );
       } else if (result?.ok) {
-        router.push("/employer/dashboard");
+        router.push("/");
       } else {
          setError("Нэвтрэхэд тодорхойгүй алдаа гарлаа.");
       }
@@ -68,10 +68,10 @@ export default function LoginPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-          Ажил хайгч нэвтрэх
+            Ажил олгогч нэвтрэх
           </h1>
           <p className="text-center text-gray-600 mb-8">
-          Та өөрийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу
+            Та өөрийн ажил олгогчийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу
           </p>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
