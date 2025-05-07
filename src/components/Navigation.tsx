@@ -182,7 +182,7 @@ export const Header = () => {
             <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
           ) : (
             <Link
-              href="/login"
+              href="/jobseeker/login"
               className="gap-2.5 self-stretch px-4 py-2 my-auto font-bold text-white whitespace-nowrap rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors"
             >
               Нэвтрэх
