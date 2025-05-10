@@ -99,7 +99,7 @@ export const Header = () => {
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-slate-900 transition-all duration-300 group-hover:w-full"></div>
             </Link>
             <Link
-              href="#about"
+              href="/about"
               className="hover:text-slate-700 cursor-pointer relative group text-slate-900"
             >
               <span className="group-hover:text-slate-700 transition-colors">

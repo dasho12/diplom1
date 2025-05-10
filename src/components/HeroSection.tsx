@@ -91,9 +91,7 @@ export const HeroSection = () => {
   };
 
   return (
-    <section
-      className="w-full min-h-screen self-center px-32 w-full max-md:pt-10 max-md:max-w-full relative"
-    >
+    <section className="w-full min-h-screen  self-center px-32 w-full max-md:pt-10 max-md:max-w-full relative">
       {/* Spline background */}
       <div className="absolute inset-0 z-0">
         <Spline scene="https://prod.spline.design/hNC5B1RNfKCeT0ny/scene.splinecode" />

@@ -36,6 +36,7 @@ model User {
   company   Company? @relation(fields: [companyId], references: [id])
   companyId String?  @db.ObjectId
   cvs       CV[]
+  jobApplications JobApplication[]
 }
 
 model Company {
@@ -62,6 +63,7 @@ model Job {
   updatedAt    DateTime  @updatedAt
   company      Company   @relation(fields: [companyId], references: [id])
   companyId    String    @db.ObjectId
+  applications JobApplication[]
 }
 
 model CV {
@@ -76,4 +78,21 @@ model CV {
   userId      String   @db.ObjectId
   status      String?  @default("PENDING")
   matchScore  Float?
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  status    String   @default("PENDING")
+  message   String?
+  job       Job      @relation(fields: [jobId], references: [id])
+  jobId     String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.ObjectId
+  cv        CV       @relation(fields: [cvId], references: [id])
+  cvId      String   @db.ObjectId
+
+  @@unique([jobId, userId])
 } 
