@@ -39,7 +39,7 @@ export default async function JobseekerProfilePage() {
         },
       },
     },
-  });
+  }) as any;
 
   if (!user) {
     return (
@@ -51,117 +51,73 @@ export default async function JobseekerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-8 md:py-12 mt-12">
-      <div className="container mx-auto max-w-4xl px-4 space-y-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
-          Ажил хайгчийн профайл
-        </h1>
-
-        <div className="bg-gray-200 shadow-lg rounded-lg overflow-hidden">
-          <div className="p-6 sm:p-10">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-6 sm:space-y-0 sm:space-x-8">
-              <div className="relative flex-shrink-0 text-center">
-                <div className="w-32 h-32 mx-auto relative">
-                  {user.profileImageUrl ? (
-                    <Image
-                      src={user.profileImageUrl}
-                      alt="Profile Picture"
-                      width={128}
-                      height={128}
-                      className="rounded-full object-cover w-full h-full border-4 border-gray-100 shadow-sm"
-                    />
-                  ) : (
-                    <UserCircleIcon className="h-32 w-32 text-gray-500" />
-                  )}
-                  <ProfileImageUpload
-                    userId={user.id}
-                    currentImageUrl={user.profileImageUrl}
-                  />
-                </div>
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-10">
+      <div className="w-full max-w-6xl flex flex-col md:flex-row gap-8">
+        {/* Зүүн багана: Хувийн мэдээлэл */}
+        <div className="md:w-1/2 w-full flex flex-col items-center">
+          <div className="w-full bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center mb-8 border border-gray-100 relative transition hover:shadow-2xl">
+            {/* Профайл зураг эсвэл icon */}
+            <div className="w-28 h-28 mb-4 flex items-center justify-center bg-gray-100 rounded-full shadow-inner border-4 border-white">
+              {user.profileImageUrl ? (
+                <Image
+                  src={user.profileImageUrl}
+                  alt="Profile Picture"
+                  width={112}
+                  height={112}
+                  className="rounded-full object-cover w-full h-full"
+                />
+              ) : (
+                <UserCircleIcon className="h-24 w-24 text-gray-400" />
+              )}
+            </div>
+            <h2 className="font-bold text-2xl mb-4 text-black tracking-tight">{user.name}</h2>
+            <div className="w-full flex flex-col gap-3 mb-4">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 01-8 0m8 0V8a4 4 0 00-8 0v4m8 0a4 4 0 01-8 0m8 0v4a4 4 0 01-8 0v-4" /></svg>
+                <span className="text-black text-base">{user.email}</span>
               </div>
-
-              <div className="flex-grow text-center sm:text-left pt-2">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">
-                  {user.name || "Нэр"}
-                </h2>
-                <p className="text-gray-700 text-lg mb-2">{user.email}</p>
-                {user.phoneNumber && (
-                  <p className="text-gray-600 text-md mb-1">
-                    <span className="font-medium">Утас:</span>{" "}
-                    {user.phoneNumber}
-                  </p>
-                )}
-                {user.facebookUrl && (
-                  <p className="text-gray-600 text-md mb-1">
-                    <span className="font-medium">Facebook:</span>{" "}
-                    <a
-                      href={user.facebookUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-600 hover:underline break-all"
-                    >
-                      {user.facebookUrl}
-                    </a>
-                  </p>
-                )}
-                <Link
-                  href="/jobseeker/profile/edit"
-                  className="mt-4 inline-block text-sm text-indigo-700 hover:text-indigo-900 font-medium"
-                >
-                  Профайл засах
-                </Link>
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 007.48 19h9.04a2 2 0 001.83-1.3L17 13M7 13V6a1 1 0 011-1h5a1 1 0 011 1v7" /></svg>
+                <span className="text-black text-base">{user.phoneNumber}</span>
               </div>
             </div>
+            <button className="mt-2 px-8 py-2 bg-[#0a1931] text-white rounded-lg font-semibold shadow hover:bg-[#185adb] transition text-black w-full">
+              CV Хадгалах
+            </button>
+            <Link
+              href="/jobseeker/profile/edit"
+              className="mt-4 flex items-center justify-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-full font-semibold shadow-lg hover:from-indigo-600 hover:to-blue-600 transition text-base w-full max-w-xs"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6 6M3 21h18" /></svg>
+              Профайл засах
+            </Link>
           </div>
         </div>
 
-        <div className="bg-gray-200 shadow-lg rounded-lg overflow-hidden">
-          <div className="p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <h2 className="text-xl md:text-2xl font-semibold text-gray-700">
-                Миний CV-нүүд
-              </h2>
-              <ProfileCVUpload />
-            </div>
+        {/* Баруун багана: CV жагсаалт */}
+        <div className="md:w-1/2 w-full">
+          <h2 className="font-bold text-lg mb-6 text-black">Оруулсан CV-үүд</h2>
+          <div className="flex flex-col gap-4 max-h-[40rem] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 rounded-xl">
             {user.cvs && user.cvs.length > 0 ? (
-              <ul className="space-y-4">
-                {user.cvs.map((cv) => (
-                  <li
-                    key={cv.id}
-                    className="p-5 border border-gray-400 rounded-lg bg-gray-200 hover:shadow-md transition duration-200 ease-in-out flex flex-col sm:flex-row justify-between sm:items-center gap-3"
-                  >
-                    <div className="flex-grow">
-                      <p className="font-semibold text-gray-900 text-lg break-words">
-                        {cv.fileName}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Огноо: {new Date(cv.createdAt).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Төлөв:{" "}
-                        <span
-                          className={`font-semibold px-2 py-0.5 rounded-full text-xs ${
-                            cv.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : cv.status === "ANALYZED"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {cv.status || "N/A"}
-                        </span>
-                      </p>
+              user.cvs.map((cv: any) => (
+                <div
+                  key={cv.id}
+                  className="bg-white rounded-xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-center text-black border border-gray-100 hover:shadow-xl transition"
+                >
+                  <div>
+                    <div className="font-semibold text-base text-black">{cv.fileName}</div>
+                    <div className="text-xs text-gray-500 mt-1 text-black">
+                      Огноо: {new Date(cv.createdAt).toLocaleDateString()}
                     </div>
-                    <div className="flex-shrink-0 mt-3 sm:mt-0"></div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-center py-8 px-4 border-2 border-dashed border-gray-400 rounded-lg">
-                <p className="text-gray-600">Та CV оруулаагүй байна.</p>
-                <div className="mt-4">
-                  <ProfileCVUpload />
+                  </div>
+                  <button className="mt-2 sm:mt-0 px-5 py-2 bg-[#0a1931] text-white rounded-lg font-semibold shadow hover:bg-[#185adb] transition text-black">
+                    Татах
+                  </button>
                 </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-lg p-5 shadow text-center text-gray-500 text-black">
+                CV оруулаагүй байна.
               </div>
             )}
           </div>
