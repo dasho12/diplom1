@@ -61,6 +61,11 @@ export default function EmployerApplicationsPage() {
           const data = await response.json();
           console.log("Received applications:", data);
           setApplications(data);
+
+          // Mark applications as viewed
+          await fetch("/api/employer/applications/mark-viewed", {
+            method: "POST",
+          });
         } catch (err: any) {
           console.error("Error in fetchApplications:", err);
           setError(err.message);
