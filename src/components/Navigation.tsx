@@ -167,7 +167,7 @@ export const Header = () => {
         <div className="flex gap-4 text-sm">
           {!isEmployer && (
             <Link
-              href="/employer/register"
+              href="/employer/login"
               className="gap-2.5 self-stretch px-4 py-2 my-auto font-medium rounded-lg border border-solid border-[#0C213A]/40 text-[#0C213A]/60 hover:border-[#0C213A]/60 hover:text-[#0C213A] hover:bg-[#0C213A]/5 transition-all duration-200"
             >
               Ажил олгогч

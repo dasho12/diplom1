@@ -48,8 +48,8 @@ const ProcessStep = ({ icon, title, description }: ProcessStep) => (
 
 export default function ProcessSection() {
   return (
-    <section className="flex flex-col justify-center px-72 py-16 w-full bg-slate-100 min-h-[512px] max-md:px-5 max-md:max-w-full">
-      <div className="flex flex-col items-center w-full max-w-[1320px] max-md:max-w-full">
+    <section className="flex flex-col justify-center px-72 py-16 w-full bg-white min-h-[512px] max-md:px-5 max-md:max-w-full">
+      <div className="flex flex-col items-center w-full max-w-[1320px] max-md:max-w-full mt-10">
         <h2 className="text-3xl font-medium leading-8 text-center text-slate-900 max-md:max-w-full">
           Өөрийн CV-д хэрхэн дүн шинжилгээ хийлгэх вэ?
         </h2>

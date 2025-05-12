@@ -19,6 +19,7 @@
     "@types/pdf-parse": "^1.1.5",
     "bcryptjs": "^3.0.2",
     "docx": "^9.4.1",
+    "framer-motion": "^12.10.5",
     "mammoth": "^1.9.0",
     "mongoose": "^8.13.2",
     "multer": "^1.4.5-lts.2",

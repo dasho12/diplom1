@@ -55,7 +55,7 @@ export default function LoginPage() {
                 Тусламж
               </button>
               <button
-                onClick={() => router.push("/employer/register")} // Link to employer registration
+                onClick={() => router.push("/employer/register")}
                 className="px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
               >
                 Бүртгүүлэх (Ажил олгогч)
@@ -69,7 +69,7 @@ export default function LoginPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-            Ажил SADFD нэвтрэх
+            Ажил олгогчоор нэвтрэх
           </h1>
           <p className="text-center text-gray-600 mb-8">
             Та өөрийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу
@@ -181,12 +181,12 @@ export default function LoginPage() {
 
           <p className="mt-4 text-center text-sm text-gray-600">
             Бүртгэлгүй юу?{" "}
-            <a
-              href="/jobseeker/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+            <button
+              onClick={() => router.push("/employer/register")} // Link to jobseeker registration
+              className="px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
             >
-              Бүртгүүлэх
-            </a>
+              Бүртгүүлэх (Ажил олгогч)
+            </button>
           </p>
         </div>
       </div>

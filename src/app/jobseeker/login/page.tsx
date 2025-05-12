@@ -29,17 +29,19 @@ export default function JobSeekerLoginPage() {
       // Backend-ийн authorize функц role буруу эсвэл нууц үг буруу үед error буцаана
       if (result?.error) {
         setError(
-          result.error || "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
+          result.error ||
+            "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
         );
-      } else if (result?.ok) { // Амжилттай болсон (backend role-г зөвшөөрсөн)
+      } else if (result?.ok) {
+        // Амжилттай болсон (backend role-г зөвшөөрсөн)
         router.push("/"); // Employer dashboard руу чиглүүлэх
       } else {
-         // Бусад тохиолдол (ховор байх)
-         setError("Нэвтрэхэд тодорхойгүй алдаа гарлаа.");
+        // Бусад тохиолдол (ховор байх)
+        setError("Нэвтрэхэд тодорхойгүй алдаа гарлаа.");
       }
     } catch (error: any) {
-       console.error("Login error:", error);
-       setError(error.message || "Нэвтрэх үед системийн алдаа гарлаа."); // Catch block-ийн алдаа
+      console.error("Login error:", error);
+      setError(error.message || "Нэвтрэх үед системийн алдаа гарлаа."); // Catch block-ийн алдаа
     }
   };
 
@@ -162,8 +164,8 @@ export default function JobSeekerLoginPage() {
               </div>
             </form>
 
-             {/* Social logins and separator removed */}
-             {/* <div className="mt-6">
+            {/* Social logins and separator removed */}
+            {/* <div className="mt-6">
                <div className="relative">
                  <div className="absolute inset-0 flex items-center">
                    <div className="w-full border-t border-gray-300"></div>
@@ -184,19 +186,18 @@ export default function JobSeekerLoginPage() {
              </div> */}
           </div>
 
-           {/* Link to job seeker registration */}
-           <p className="mt-4 text-center text-sm text-gray-600">
-              Бүртгэлгүй юу?{" "}
-              <a
-               href="/jobseeker/register"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-               Бүртгүүлэх
-              </a>
-            </p>
+          {/* Link to job seeker registration */}
+          <p className="mt-4 text-center text-sm text-gray-600">
+            Бүртгэлгүй юу?{" "}
+            <a
+              href="/jobseeker/register"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
+              Бүртгүүлэх
+            </a>
+          </p>
         </div>
       </div>
     </div>
   );
-
-} 
+}

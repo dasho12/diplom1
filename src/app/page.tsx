@@ -1,4 +1,3 @@
-
 import { HeroSection } from "../components/HeroSection";
 import ProcessSection from "../components/ProcessSection";
 import { Footer } from "../components/Footer";
