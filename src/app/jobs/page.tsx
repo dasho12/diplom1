@@ -1,14 +1,27 @@
+"use client";
+
+import { useState } from "react";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import JobsList from "@/components/JobsList";
+import JobDetails from "@/components/JobDetails";
 
-export default async function JobsPage() {
-  const session = await getServerSession(authOptions);
+interface Job {
+  id: string;
+  title: string;
+  company: {
+    name: string;
+  };
+  description: string;
+  requirements: string;
+  location: string;
+  salary?: string;
+  createdAt: string;
+}
 
-  if (!session) {
-    redirect("/login");
-  }
+export default function JobsPage() {
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   return (
     <div className="min-h-screen mt-16 bg-gray-50">
@@ -16,13 +29,11 @@ export default async function JobsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left: Filters, Search, Job List */}
           <div>
-            <JobsList />
+            <JobsList onJobSelect={setSelectedJob} />
           </div>
-          {/* Right: Job Details (placeholder for now) */}
+          {/* Right: Job Details */}
           <div className="hidden lg:block">
-            <div className="bg-white shadow rounded-lg p-8 min-h-[500px] flex items-center justify-center text-gray-400">
-              Ажлын байр сонгогдоогүй байна
-            </div>
+            <JobDetails job={selectedJob} />
           </div>
         </div>
       </main>

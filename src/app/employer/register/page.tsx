@@ -54,7 +54,7 @@ export default function EmployerRegister() {
         <p className="mt-2 text-center text-sm text-gray-600">
           Эсвэл{" "}
           <Link
-            href="/login"
+            href="/employer/login"
             className="font-medium text-indigo-600 hover:text-indigo-500"
           >
             нэвтрэх

@@ -56,6 +56,25 @@ export default function EmployerProfile() {
     }
   };
 
+  const handleDeleteJob = async (jobId: string) => {
+    if (window.confirm('Энэ ажлын байрыг устгахдаа итгэлтэй байна уу?')) {
+      try {
+        const response = await fetch(`/api/employer/jobs/${jobId}`, {
+          method: 'DELETE',
+        });
+        
+        if (response.ok) {
+          setJobs(jobs.filter(job => job.id !== jobId));
+        } else {
+          alert('Ажлын байрыг устгахад алдаа гарлаа');
+        }
+      } catch (error) {
+        console.error('Error deleting job:', error);
+        alert('Ажлын байрыг устгахад алдаа гарлаа');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -65,122 +84,129 @@ export default function EmployerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen mt-16 bg-gray-50">
       <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        {/* Company Information */}
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {company?.name}
-              </h1>
-              <p className="mt-2 text-gray-600">{company?.description}</p>
-              <div className="mt-4 space-y-2">
-                <p className="text-sm text-gray-500">
-                  <span className="font-medium">Байршил:</span>{" "}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left: Company Info and Post Job Button */}
+          <div>
+            <div className="mb-6 pb-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold mb-4 text-black">
+                Байгууллагын мэдээлэл
+              </h2>
+              <div className="space-y-3 text-black">
+                <div>
+                  <span className="font-semibold">Байгууллагын нэр:</span>{" "}
+                  {company?.name}
+                </div>
+                <div>
+                  <span className="font-semibold">Байгууллагын Email:</span>{" "}
+                  {session?.user?.email}
+                </div>
+                <div>
+                  <span className="font-semibold">Холбоо барих:</span> 90099810
+                </div>
+                <div>
+                  <span className="font-semibold">Хаяг:</span>{" "}
                   {company?.location}
-                </p>
-                {company?.website && (
-                  <p className="text-sm text-gray-500">
-                    <span className="font-medium">Вэб хаяг:</span>{" "}
-                    <a
-                      href={company.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-indigo-600 hover:text-indigo-500"
-                    >
-                      {company.website}
-                    </a>
-                  </p>
-                )}
+                </div>
               </div>
+              <Link
+                href="/employer/post-job"
+                className="mt-6 block w-full text-center bg-blue-900 text-white py-2 rounded-md font-medium hover:bg-blue-800 transition-colors"
+              >
+                Ажлын байр нийтлэх
+              </Link>
             </div>
-            <Link
-              href="/employer/edit-profile"
-              className="text-sm text-indigo-600 hover:text-indigo-500"
-            >
-              Мэдээлэл засах
-            </Link>
           </div>
-        </div>
 
-        {/* Job Posting Button */}
-        <div className="mb-8">
-          <Link
-            href="/employer/post-job"
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Шинэ ажлын байр нийтлэх
-          </Link>
-        </div>
-
-        {/* Posted Jobs */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Нийтэлсэн ажлын байрууд
-          </h2>
-          <div className="space-y-6">
-            {jobs.length === 0 ? (
-              <p className="text-gray-500">
-                Одоогоор ажлын байр нийтлээгүй байна.
-              </p>
-            ) : (
-              jobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {job.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                        {job.description}
-                      </p>
-                      <div className="mt-2 space-x-4">
-                        <span className="text-sm text-gray-500">
-                          Байршил: {job.location}
-                        </span>
-                        {job.salary && (
-                          <span className="text-sm text-gray-500">
+          {/* Right: Posted Jobs */}
+          <div>
+            <h2 className="text-2xl font-bold mb-6 text-black">
+              Нийтэлсэн ажлын байрууд
+            </h2>
+            <div className="flex flex-col gap-4">
+              {jobs.length === 0 ? (
+                <p className="text-black">
+                  Одоогоор ажлын байр нийтлээгүй байна.
+                </p>
+              ) : (
+                jobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <img
+                        src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
+                        alt="logo"
+                        className="w-14 h-14 object-contain rounded-lg bg-gray-100"
+                      />
+                      <div>
+                        <h3 className="text-lg font-semibold text-black">
+                          {job.title}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className="text-green-700 bg-green-50 px-2 py-1 text-xs font-semibold rounded">
+                            БҮТЭН ЦАГ
+                          </span>
+                          <span className="text-black text-sm">
                             Цалин: {job.salary}
                           </span>
-                        )}
-                      </div>
-                      <div className="mt-2">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            job.status === "OPEN"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {job.status === "OPEN" ? "Нээлттэй" : "Хаалттай"}
-                        </span>
-                        <span className="ml-2 text-xs text-gray-500">
-                          {new Date(job.createdAt).toLocaleDateString()}
-                        </span>
+                        </div>
+                        <div className="text-black text-sm mt-1">
+                          {company?.name}
+                        </div>
+                        <div className="text-gray-400 text-xs mt-1">
+                          {job.location}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2 self-end md:self-auto">
                       <Link
                         href={`/employer/jobs/${job.id}/edit`}
-                        className="text-sm text-indigo-600 hover:text-indigo-500"
+                        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+                        title="Засах"
                       >
-                        Засах
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-5 h-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L7.5 19.789l-4 1 1-4 13.362-13.302z"
+                          />
+                        </svg>
                       </Link>
-                      <Link
-                        href={`/employer/jobs/${job.id}/applications`}
-                        className="text-sm text-indigo-600 hover:text-indigo-500"
+                      <button
+                        onClick={() => handleDeleteJob(job.id)}
+                        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+                        title="Устгах"
                       >
-                        Анкетууд
-                      </Link>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-5 h-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                          />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       </main>

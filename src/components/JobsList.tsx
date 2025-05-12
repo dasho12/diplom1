@@ -46,11 +46,16 @@ const FILTERS = [
   { label: "Хагас цагийн", icon: "⏰" },
 ];
 
-export default function JobsList() {
+interface JobsListProps {
+  onJobSelect: (job: Job | null) => void;
+}
+
+export default function JobsList({ onJobSelect }: JobsListProps) {
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
   );
@@ -180,61 +185,62 @@ export default function JobsList() {
       ) : (
         <div className="flex flex-col gap-4">
           {filteredJobs.map((job) => (
-            <Link href={`/jobs/${job.id}`} key={job.id}>
-              <div className="bg-white shadow rounded-lg p-4 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 cursor-pointer">
-                {/* Badge */}
-                <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
-                  БҮТЭН ЦАГ
-                </span>
-                {/* Logo (placeholder) */}
-                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
-                  <img
-                    src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
-                    alt="logo"
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-                {/* Job info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900 truncate">
-                    {job.title}
-                  </h3>
-                  <p className="text-md text-gray-600 truncate">
-                    {job.company.name}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {job.location}
-                  </p>
-                  {job.salary && (
-                    <p className="text-sm text-gray-500 truncate">
-                      {job.salary}
-                    </p>
-                  )}
-                </div>
-                {/* Bookmark icon */}
-                <button
-                  className="ml-2 p-2 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Bookmark job"
-                  tabIndex={-1}
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                    />
-                  </svg>
-                </button>
+            <div
+              key={job.id}
+              className="bg-white shadow rounded-lg p-4 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+              onClick={() => {
+                setSelectedJob(job);
+                onJobSelect(job);
+              }}
+            >
+              {/* Badge */}
+              <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
+                БҮТЭН ЦАГ
+              </span>
+              {/* Logo (placeholder) */}
+              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
+                  alt="logo"
+                  className="w-10 h-10 object-contain"
+                />
               </div>
-            </Link>
+              {/* Job info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  {job.title}
+                </h3>
+                <p className="text-md text-gray-600 truncate">
+                  {job.company.name}
+                </p>
+                <p className="text-sm text-gray-500 truncate">{job.location}</p>
+                {job.salary && (
+                  <p className="text-sm text-gray-500 truncate">{job.salary}</p>
+                )}
+              </div>
+              {/* Bookmark icon */}
+              <button
+                className="ml-2 p-2 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Bookmark job"
+                tabIndex={-1}
+                onClick={(e) => e.preventDefault()}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+              </button>
+            </div>
           ))}
         </div>
       )}
