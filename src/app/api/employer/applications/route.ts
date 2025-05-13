@@ -5,43 +5,47 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    console.log("Fetching employer applications...");
+    console.log("Starting to fetch employer applications...");
     const session = await getServerSession(authOptions);
-    console.log("Session:", session?.user);
 
     if (!session?.user?.email) {
-      console.log("No session or email found");
+      console.log("Authentication failed: No session or email");
       return NextResponse.json(
         { error: "Нэвтэрсэн байх шаардлагатай" },
         { status: 401 }
       );
     }
 
-    // First get the user from the database
+    console.log("User email:", session.user.email);
+
+    // Get user with company info
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: {
+        email: session.user.email,
+        role: "EMPLOYER", // Ensure user is an employer
+      },
       include: {
         company: true,
       },
     });
 
     if (!user) {
-      console.log("User not found in database");
+      console.log("User not found or not an employer");
       return NextResponse.json(
-        { error: "Хэрэглэгч олдсонгүй" },
+        { error: "Ажил олгогч хэрэглэгч олдсонгүй" },
         { status: 404 }
       );
     }
 
     if (!user.company) {
-      console.log("User has no company");
+      console.log("No company associated with user");
       return NextResponse.json(
-        { error: "Таны компани олдсонгүй" },
+        { error: "Таны компани олдсонгүй. Эхлээд компани бүртгүүлнэ үү." },
         { status: 404 }
       );
     }
 
-    console.log("Found company:", user.company.id);
+    console.log("Fetching applications for company:", user.company.id);
 
     // Get all applications for jobs posted by this company
     const applications = await prisma.jobApplication.findMany({
@@ -77,17 +81,24 @@ export async function GET() {
       },
     });
 
-    // Filter out applications without CV data at the database level
+    console.log(`Found ${applications.length} total applications`);
+
+    // Filter out applications without CV data
     const validApplications = applications.filter(
       (app) => app.cv && app.cv.fileUrl
     );
+    console.log(`Found ${validApplications.length} valid applications with CV`);
 
-    console.log("Found applications:", validApplications.length);
+    if (validApplications.length === 0) {
+      console.log("No valid applications found");
+      return NextResponse.json([]); // Return empty array instead of error
+    }
+
     return NextResponse.json(validApplications);
   } catch (error) {
     console.error("Error in GET /api/employer/applications:", error);
     return NextResponse.json(
-      { error: "Өргөдлүүдийг ачаалахад алдаа гарлаа" },
+      { error: "Системийн алдаа гарлаа. Дараа дахин оролдоно уу." },
       { status: 500 }
     );
   }

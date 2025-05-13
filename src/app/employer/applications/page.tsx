@@ -34,8 +34,63 @@ export default function EmployerApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Ажлын байр бүрээр өргөдлүүдийг бүлэглэх
-  const jobsMap: { [jobId: string]: { title: string; applications: JobApplication[] } } = {};
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      console.log("User is not authenticated, redirecting to login");
+      router.push("/employer/login");
+      return;
+    }
+
+    if (status === "authenticated" && session?.user) {
+      fetchApplications();
+    }
+  }, [session, status, router]);
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log("Fetching applications...");
+
+      const response = await fetch("/api/employer/applications");
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "Өргөдлүүдийг ачаалахад алдаа гарлаа"
+        );
+      }
+
+      const data = await response.json();
+      console.log("Received applications:", data);
+
+      if (Array.isArray(data)) {
+        setApplications(data);
+      } else {
+        throw new Error("Буруу өгөгдөл ирлээ");
+      }
+
+      // Mark applications as viewed
+      try {
+        await fetch("/api/employer/applications/mark-viewed", {
+          method: "POST",
+        });
+      } catch (err) {
+        console.error("Error marking applications as viewed:", err);
+      }
+    } catch (err: any) {
+      console.error("Error in fetchApplications:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group applications by job
+  const jobsMap: {
+    [jobId: string]: { title: string; applications: JobApplication[] };
+  } = {};
   applications.forEach((app) => {
     if (!jobsMap[app.job.id]) {
       jobsMap[app.job.id] = { title: app.job.title, applications: [] };
@@ -44,57 +99,12 @@ export default function EmployerApplicationsPage() {
   });
   const jobs = Object.entries(jobsMap);
 
-  useEffect(() => {
-    console.log("Session status:", status);
-    console.log("Session data:", session);
-
-    if (status === "unauthenticated") {
-      console.log("User is not authenticated, redirecting to login");
-      router.push("/login");
-      return;
-    }
-
-    if (status === "authenticated") {
-      console.log("User is authenticated, fetching applications");
-      const fetchApplications = async () => {
-        try {
-          console.log("Fetching employer applications...");
-          const response = await fetch("/api/employer/applications");
-          console.log("Response status:", response.status);
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error response:", errorData);
-            throw new Error(
-              errorData.error || "Өргөдлүүдийг ачаалахад алдаа гарлаа"
-            );
-          }
-
-          const data = await response.json();
-          console.log("Received applications:", data);
-          setApplications(data);
-
-          // Mark applications as viewed
-          await fetch("/api/employer/applications/mark-viewed", {
-            method: "POST",
-          });
-        } catch (err: any) {
-          console.error("Error in fetchApplications:", err);
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchApplications();
-    }
-  }, [session, status, router]);
-
   const handleStatusChange = async (
     applicationId: string,
     newStatus: string
   ) => {
     try {
+      setError(null);
       const response = await fetch(
         `/api/employer/applications/${applicationId}`,
         {
@@ -115,6 +125,7 @@ export default function EmployerApplicationsPage() {
         )
       );
     } catch (err: any) {
+      console.error("Error updating status:", err);
       setError(err.message);
     }
   };
@@ -237,55 +248,107 @@ export default function EmployerApplicationsPage() {
                         <Disclosure.Button className="w-full flex items-center justify-between px-8 py-6 rounded-2xl focus:outline-none transition group">
                           <div className="flex items-center gap-4">
                             <BriefcaseIcon className="h-8 w-8 text-blue-600" />
-                            <span className="text-xl font-bold text-blue-900 group-hover:text-blue-700 transition">{job.title}</span>
+                            <span className="text-xl font-bold text-blue-900 group-hover:text-blue-700 transition">
+                              {job.title}
+                            </span>
                             <span className="ml-3 px-3 py-1 rounded-full bg-blue-200 text-blue-800 text-xs font-semibold">
                               {job.applications.length} өргөдөл
                             </span>
                           </div>
                           <ChevronUpIcon
-                            className={`${open ? "rotate-180" : "rotate-0"} h-7 w-7 text-blue-700 transition-transform`}
+                            className={`${
+                              open ? "rotate-180" : "rotate-0"
+                            } h-7 w-7 text-blue-700 transition-transform`}
                           />
                         </Disclosure.Button>
                         <Disclosure.Panel className="px-8 pb-6 pt-2 bg-white rounded-b-2xl border-t border-blue-100">
                           {job.applications.length === 0 ? (
-                            <div className="text-gray-500 text-sm py-4">Өргөдөл байхгүй</div>
+                            <div className="text-gray-500 text-sm py-4">
+                              Өргөдөл байхгүй
+                            </div>
                           ) : (
                             <ul className="divide-y divide-gray-100">
                               {job.applications.map((application) => (
-                                <li key={application.id} className="py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <li
+                                  key={application.id}
+                                  className="py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                                >
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                      <span className="font-semibold text-gray-900 text-base">{application.user.name || application.user.email}</span>
-                                      <span className="ml-2 text-xs text-gray-400">{application.user.email}</span>
-                                      <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                                      <span className="font-semibold text-gray-900 text-base">
+                                        {application.user.name ||
+                                          application.user.email}
+                                      </span>
+                                      <span className="ml-2 text-xs text-gray-400">
+                                        {application.user.email}
+                                      </span>
+                                      <span
+                                        className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                                          application.status
+                                        )}`}
+                                      >
                                         {getStatusText(application.status)}
                                       </span>
                                     </div>
                                     <div className="mt-1 flex items-center text-sm text-gray-500">
-                                      <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                      <svg
+                                        className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                          clipRule="evenodd"
+                                        />
                                       </svg>
-                                      {new Date(application.createdAt).toLocaleDateString()}
+                                      {new Date(
+                                        application.createdAt
+                                      ).toLocaleDateString()}
                                     </div>
                                     {application.message && (
-                                      <p className="mt-2 text-sm text-gray-500">{application.message}</p>
+                                      <p className="mt-2 text-sm text-gray-500">
+                                        {application.message}
+                                      </p>
                                     )}
                                   </div>
                                   <div className="ml-4 flex-shrink-0 flex flex-col items-end space-y-2">
                                     <div className="flex gap-2">
                                       <button
-                                        onClick={() => handleStatusChange(application.id, 'ACCEPTED')}
-                                        disabled={application.status === 'ACCEPTED'}
+                                        onClick={() =>
+                                          handleStatusChange(
+                                            application.id,
+                                            "ACCEPTED"
+                                          )
+                                        }
+                                        disabled={
+                                          application.status === "ACCEPTED"
+                                        }
                                         className={`px-4 py-2 rounded-md font-semibold text-xs shadow transition
-                                          ${application.status === 'ACCEPTED' ? 'bg-green-200 text-green-700 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}
+                                          ${
+                                            application.status === "ACCEPTED"
+                                              ? "bg-green-200 text-green-700 cursor-not-allowed"
+                                              : "bg-green-600 text-white hover:bg-green-700"
+                                          }`}
                                       >
                                         Зөвшөөрөх
                                       </button>
                                       <button
-                                        onClick={() => handleStatusChange(application.id, 'REJECTED')}
-                                        disabled={application.status === 'REJECTED'}
+                                        onClick={() =>
+                                          handleStatusChange(
+                                            application.id,
+                                            "REJECTED"
+                                          )
+                                        }
+                                        disabled={
+                                          application.status === "REJECTED"
+                                        }
                                         className={`px-4 py-2 rounded-md font-semibold text-xs shadow transition
-                                          ${application.status === 'REJECTED' ? 'bg-red-200 text-red-700 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}
+                                          ${
+                                            application.status === "REJECTED"
+                                              ? "bg-red-200 text-red-700 cursor-not-allowed"
+                                              : "bg-red-600 text-white hover:bg-red-700"
+                                          }`}
                                       >
                                         Татгалзах
                                       </button>
@@ -297,8 +360,16 @@ export default function EmployerApplicationsPage() {
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center px-4 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow"
                                       >
-                                        <svg className="mr-1.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                          <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                                        <svg
+                                          className="mr-1.5 h-4 w-4"
+                                          viewBox="0 0 20 20"
+                                          fill="currentColor"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
+                                            clipRule="evenodd"
+                                          />
                                         </svg>
                                         CV харах
                                       </a>
