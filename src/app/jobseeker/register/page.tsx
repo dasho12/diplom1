@@ -127,7 +127,9 @@ export default function JobseekerRegisterPage() {
 
       router.push("/jobseeker/login?message=Бүртгэл амжилттай! Та нэвтэрнэ үү.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Ямар нэг зүйл буруу боллоо");
+      setError(
+        error instanceof Error ? error.message : "Ямар нэг зүйл буруу боллоо"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -157,17 +159,16 @@ export default function JobseekerRegisterPage() {
             Нэвтрэх
           </Link>
         </div>
-        
         {/* Баруун тал: Форм */}
-        <div className="w-[675px] absolute left-[1105px] top-[150px] flex flex-col">
+        <div className="w-[675px] absolute left-[970px] top-[150px] flex flex-col">
           <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col">
             <div className="flex flex-col">
               <div className="flex flex-col">
-                <div className="flex flex-col mb-[5px]">
+                <div className="flex flex-col mb-[15px]">
                   <div className="text-[#0C213A] text-[36px] font-bold font-poppins">Ажил хайгч бүртгүүлэх</div>
                 </div>
                 <div className="flex flex-col gap-[15px] w-[564px] mb-[40px]">
-                  <div><span className="text-[#0C213A] text-[20px] font-poppins">Та доорх мэдээллийг оруулан бүртгүүлнэ үү.</span></div>
+                  <div><span className="text-[#0C213A] text-[20px] font-poppins">Та өөрийн </span><span className="text-[#0C213A] text-[20px] font-semibold font-poppins">мэдээллээ</span><span className="text-[#0C213A] text-[20px] font-poppins"> оруулна уу</span></div>
                 </div>
                 <div className="flex flex-col gap-[25px] w-[564px] mb-[20px]">
                   <div className="flex flex-col gap-[5px]">
@@ -178,7 +179,7 @@ export default function JobseekerRegisterPage() {
                       name="email" 
                       type="email"
                       required
-                      className="h-[55px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
+                      className="h-[60px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
                     />
                   </div>
                   <div className="flex flex-col gap-[5px]">
@@ -190,7 +191,7 @@ export default function JobseekerRegisterPage() {
                         name="password" 
                         type={showPassword ? "text" : "password"}
                         required
-                        className="h-[55px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
+                        className="h-[60px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
                       />
                       <button
                         type="button"
@@ -217,7 +218,7 @@ export default function JobseekerRegisterPage() {
                       name="firstName" 
                       type="text"
                       required
-                      className="h-[55px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
+                      className="h-[60px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
                     />
                   </div>
                   <div className="flex flex-col gap-[5px]">
@@ -228,16 +229,29 @@ export default function JobseekerRegisterPage() {
                       name="lastName" 
                       type="text"
                       required
-                      className="h-[55px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
+                      className="h-[60px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-[5px]">
+                    <div className="flex flex-col gap-[4px]">
+                      <div className="h-[27px] text-[#0C213A] text-[16px] font-poppins">Утасны дугаар (Заавал биш)</div>
+                    </div>
+                    <input 
+                      name="phoneNumber" 
+                      type="tel"
+                      className="h-[60px] rounded-xl bg-white border border-[#0C213A]/20 outline-none px-4 w-full text-[#0C213A]" 
                     />
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between w-[564px] mb-[50px]">
-                <button type="button" className="flex items-center gap-2">
+              <div className="flex items-center justify-between w-[564px] mb-[40px]">
+                <div className="flex items-center gap-2">
                   <img src="/icons/google1.svg" alt="Google Icon" width={22} height={22} />
-                  <span className="text-[#0C213A] text-[14px] font-poppins">Google-ээр нэвтрэх</span>
-                </button>
+                  <span className="text-[#0C213A] text-[14px] font-poppins">Google-ээр бүртгүүлэх</span>
+                </div>
+                <Link href="/employer/register" className="text-[#0C213A] text-[14px] font-light font-poppins">
+                  Ажил олгогчоор бүртгүүлэх?
+                </Link>
               </div>
             </div>
             <button 
@@ -251,7 +265,15 @@ export default function JobseekerRegisterPage() {
             </button>
           </form>
         </div>
+        {/* Error Alert */}
+        {error && (
+          <div className="fixed top-[100px] left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
+              <p className="text-red-600 text-[16px] font-poppins">{error}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
-} 
+}

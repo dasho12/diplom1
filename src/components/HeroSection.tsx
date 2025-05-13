@@ -148,7 +148,7 @@ export const HeroSection = () => {
       </div>
 
       {/* Доорх статистикууд */}
-      <div className="flex flex-row gap-4 items-center mt-6 max-md:mt-4 max-md:max-w-full relative z-10">
+      <div className="flex flex-row gap-10 items-center max-md:max-w-full relative z-10">
         {stats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}

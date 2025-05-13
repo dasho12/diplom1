@@ -16,6 +16,7 @@ export default function JobSeekerLoginPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (pageRef.current && formRef.current && imageRef.current) {
@@ -56,6 +57,29 @@ export default function JobSeekerLoginPage() {
       );
     }
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      // Show error with animation
+      gsap.fromTo(errorRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }
+      );
+
+      // Hide error after 3 seconds
+      const timer = setTimeout(() => {
+        gsap.to(errorRef.current, {
+          opacity: 0,
+          y: -20,
+          duration: 0.3,
+          ease: "power2.in",
+          onComplete: () => setError(null)
+        });
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleRegisterClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -117,9 +141,11 @@ export default function JobSeekerLoginPage() {
       });
 
       if (result?.error) {
-        setError(
-          result.error || "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
-        );
+        if (result.error === "No user found") {
+          setError("Таны бүртгэл олдсонгүй. Эхлээд бүртгүүлнэ үү.");
+        } else {
+          setError("Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна.");
+        }
       } else if (result?.ok) {
         router.push("/");
       } else {
@@ -165,7 +191,7 @@ export default function JobSeekerLoginPage() {
                 <div className="flex flex-col mb-[15px]">
                   <div className="text-[#0C213A] text-[36px] font-bold font-poppins">Ажил хайгч нэвтрэх</div>
                 </div>
-                <div className="flex flex-col gap-[15px] w-[564px] mb-[100px]">
+                <div className="flex flex-col gap-[15px] w-[564px] mb-[40px]">
                   <div><span className="text-[#0C213A] text-[20px] font-poppins">Та өөрийн бүртгэлтэй </span><span className="text-[#0C213A] text-[20px] font-semibold font-poppins">имэйл хаяг, нууц</span><span className="text-[#0C213A] text-[20px] font-poppins"> үгээ оруулна уу</span></div>
                 </div>
                 <div className="flex flex-col gap-[25px] w-[564px] mb-[20px]">
@@ -220,6 +246,14 @@ export default function JobSeekerLoginPage() {
             </button>
           </form>
         </div>
+        {/* Error Alert */}
+        {error && (
+          <div ref={errorRef} className="fixed top-[100px] left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
+              <p className="text-red-600 text-[16px] font-poppins">{error}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

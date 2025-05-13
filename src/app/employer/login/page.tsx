@@ -21,46 +21,6 @@ export default function EmployerLoginPage() {
   const errorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (pageRef.current && formRef.current && imageRef.current) {
-      // Initial animation for page load
-      gsap.fromTo(pageRef.current, 
-        { opacity: 0, scale: 0.99 },
-        { 
-          opacity: 1, 
-          scale: 1,
-          duration: 0.4,
-          ease: "power1.out"
-        }
-      );
-
-      // Stagger animation for form elements
-      gsap.fromTo(formRef.current.children,
-        { opacity: 0, y: 5 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.3,
-          stagger: 0.03,
-          ease: "power1.out",
-          delay: 0.1
-        }
-      );
-
-      // Image animation
-      gsap.fromTo(imageRef.current,
-        { opacity: 0, x: 10 },
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.4,
-          ease: "power1.out",
-          delay: 0.1
-        }
-      );
-    }
-  }, []);
-
-  useEffect(() => {
     if (error) {
       // Show error with animation
       gsap.fromTo(errorRef.current,

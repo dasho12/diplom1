@@ -24,15 +24,15 @@ interface JobMatch {
   };
 }
 
-interface CVUploadProps {
+interface CVUploadWithProfileProps {
   onAnalysisStart: () => void;
   onAnalysisComplete: (analysis: string, matches: JobMatch[] | null) => void;
 }
 
-export default function CVUpload({
+export default function CVUploadWithProfile({
   onAnalysisStart,
   onAnalysisComplete,
-}: CVUploadProps) {
+}: CVUploadWithProfileProps) {
   const { data: session } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -65,14 +65,12 @@ export default function CVUpload({
     setError(null);
     onAnalysisStart();
 
-    // Show initial loading message
     await sendMessage("CV-г боловсруулж байна. Түр хүлээнэ үү...");
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Upload CV and get analysis
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
@@ -88,14 +86,10 @@ export default function CVUpload({
         throw new Error("CV analysis failed");
       }
 
-      // Send the analysis to chat
       await sendMessage(`CV Шинжилгээ:\n\n${data.analysis}`);
-
-      // Show loading message for job matches
       await sendMessage("Ажлын байруудыг хайж байна...");
 
       if (data.matches && data.matches.length > 0) {
-        // Send job matches to chat
         const matchesMessage = data.matches
           .map(
             (match: JobMatch) =>
@@ -131,6 +125,7 @@ export default function CVUpload({
       onAnalysisComplete("", null);
     } finally {
       setUploading(false);
+      setFile(null);
     }
   };
 

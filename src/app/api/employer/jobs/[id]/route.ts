@@ -5,19 +5,16 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session) {
-      return NextResponse.json(
-        { error: "Нэвтрээгүй байна" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
     }
 
-    const jobId = params.id;
+    const jobId = context.params?.id;
 
     // Check if the job exists and belongs to the employer
     const job = await prisma.job.findFirst({
@@ -26,11 +23,11 @@ export async function GET(
         company: {
           users: {
             some: {
-              id: session.user.id
-            }
-          }
-        }
-      }
+              id: session.user.id,
+            },
+          },
+        },
+      },
     });
 
     if (!job) {
@@ -43,63 +40,31 @@ export async function GET(
     return NextResponse.json(job);
   } catch (error) {
     console.error("Error fetching job:", error);
-    return NextResponse.json(
-      { error: "Алдаа гарлаа" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Алдаа гарлаа" }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  req: Request,
+  context: { params: { id: string } }
 ) {
+  const jobId = context.params?.id;
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json(
-        { error: "Нэвтрээгүй байна" },
-        { status: 401 }
-      );
-    }
-
-    const jobId = params.id;
-
-    // Check if the job exists and belongs to the employer
-    const job = await prisma.job.findFirst({
-      where: {
-        id: jobId,
-        company: {
-          users: {
-            some: {
-              id: session.user.id
-            }
-          }
-        }
-      }
+    // 1. Delete all job applications related to this job
+    await prisma.jobApplication.deleteMany({
+      where: { jobId },
     });
 
-    if (!job) {
-      return NextResponse.json(
-        { error: "Ажлын байр олдсонгүй" },
-        { status: 404 }
-      );
-    }
-
-    // Delete the job
+    // 2. Delete the job itself
     await prisma.job.delete({
-      where: {
-        id: jobId
-      }
+      where: { id: jobId },
     });
 
-    return NextResponse.json({ message: "Ажлын байр амжилттай устгагдлаа" });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting job:", error);
     return NextResponse.json(
-      { error: "Алдаа гарлаа" },
+      { error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
-} 
+}
