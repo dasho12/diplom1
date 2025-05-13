@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Disclosure } from "@headlessui/react";
+import { ChevronUpIcon, BriefcaseIcon } from "@heroicons/react/24/solid";
 
 interface JobApplication {
   id: string;
@@ -31,6 +33,16 @@ export default function EmployerApplicationsPage() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Ажлын байр бүрээр өргөдлүүдийг бүлэглэх
+  const jobsMap: { [jobId: string]: { title: string; applications: JobApplication[] } } = {};
+  applications.forEach((app) => {
+    if (!jobsMap[app.job.id]) {
+      jobsMap[app.job.id] = { title: app.job.title, applications: [] };
+    }
+    jobsMap[app.job.id].applications.push(app);
+  });
+  const jobs = Object.entries(jobsMap);
 
   useEffect(() => {
     console.log("Session status:", status);
@@ -61,6 +73,11 @@ export default function EmployerApplicationsPage() {
           const data = await response.json();
           console.log("Received applications:", data);
           setApplications(data);
+
+          // Mark applications as viewed
+          await fetch("/api/employer/applications/mark-viewed", {
+            method: "POST",
+          });
         } catch (err: any) {
           console.error("Error in fetchApplications:", err);
           setError(err.message);
@@ -187,7 +204,7 @@ export default function EmployerApplicationsPage() {
           </div>
         </div>
 
-        {applications.length === 0 ? (
+        {jobs.length === 0 ? (
           <div className="text-center py-12">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
@@ -212,99 +229,89 @@ export default function EmployerApplicationsPage() {
         ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
-              {applications.map((application) => (
-                <li key={application.id} className="hover:bg-gray-50">
-                  <div className="px-4 py-5 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center">
-                          <h3 className="text-lg font-medium text-gray-900 truncate">
-                            {application.job.title}
-                          </h3>
-                          <span
-                            className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                              application.status
-                            )}`}
-                          >
-                            {getStatusText(application.status)}
-                          </span>
-                        </div>
-                        <div className="mt-2 flex flex-col sm:flex-row sm:justify-between">
-                          <div className="sm:flex">
-                            <p className="flex items-center text-sm text-gray-500">
-                              <svg
-                                className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              {application.user.name || application.user.email}
-                            </p>
+              {jobs.map(([jobId, job]) => (
+                <li key={jobId} className="mb-6">
+                  <Disclosure>
+                    {({ open }) => (
+                      <div className="rounded-2xl shadow-lg bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200">
+                        <Disclosure.Button className="w-full flex items-center justify-between px-8 py-6 rounded-2xl focus:outline-none transition group">
+                          <div className="flex items-center gap-4">
+                            <BriefcaseIcon className="h-8 w-8 text-blue-600" />
+                            <span className="text-xl font-bold text-blue-900 group-hover:text-blue-700 transition">{job.title}</span>
+                            <span className="ml-3 px-3 py-1 rounded-full bg-blue-200 text-blue-800 text-xs font-semibold">
+                              {job.applications.length} өргөдөл
+                            </span>
                           </div>
-                          <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <svg
-                              className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {new Date(
-                              application.createdAt
-                            ).toLocaleDateString()}
-                          </div>
-                        </div>
-                        {application.message && (
-                          <p className="mt-2 text-sm text-gray-500">
-                            {application.message}
-                          </p>
-                        )}
+                          <ChevronUpIcon
+                            className={`${open ? "rotate-180" : "rotate-0"} h-7 w-7 text-blue-700 transition-transform`}
+                          />
+                        </Disclosure.Button>
+                        <Disclosure.Panel className="px-8 pb-6 pt-2 bg-white rounded-b-2xl border-t border-blue-100">
+                          {job.applications.length === 0 ? (
+                            <div className="text-gray-500 text-sm py-4">Өргөдөл байхгүй</div>
+                          ) : (
+                            <ul className="divide-y divide-gray-100">
+                              {job.applications.map((application) => (
+                                <li key={application.id} className="py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold text-gray-900 text-base">{application.user.name || application.user.email}</span>
+                                      <span className="ml-2 text-xs text-gray-400">{application.user.email}</span>
+                                      <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                                        {getStatusText(application.status)}
+                                      </span>
+                                    </div>
+                                    <div className="mt-1 flex items-center text-sm text-gray-500">
+                                      <svg className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                      </svg>
+                                      {new Date(application.createdAt).toLocaleDateString()}
+                                    </div>
+                                    {application.message && (
+                                      <p className="mt-2 text-sm text-gray-500">{application.message}</p>
+                                    )}
+                                  </div>
+                                  <div className="ml-4 flex-shrink-0 flex flex-col items-end space-y-2">
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleStatusChange(application.id, 'ACCEPTED')}
+                                        disabled={application.status === 'ACCEPTED'}
+                                        className={`px-4 py-2 rounded-md font-semibold text-xs shadow transition
+                                          ${application.status === 'ACCEPTED' ? 'bg-green-200 text-green-700 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}
+                                      >
+                                        Зөвшөөрөх
+                                      </button>
+                                      <button
+                                        onClick={() => handleStatusChange(application.id, 'REJECTED')}
+                                        disabled={application.status === 'REJECTED'}
+                                        className={`px-4 py-2 rounded-md font-semibold text-xs shadow transition
+                                          ${application.status === 'REJECTED' ? 'bg-red-200 text-red-700 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}
+                                      >
+                                        Татгалзах
+                                      </button>
+                                    </div>
+                                    {application.cv && (
+                                      <a
+                                        href={application.cv.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center px-4 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow"
+                                      >
+                                        <svg className="mr-1.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                          <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                                        </svg>
+                                        CV харах
+                                      </a>
+                                    )}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </Disclosure.Panel>
                       </div>
-                      <div className="ml-4 flex-shrink-0 flex flex-col items-end space-y-2">
-                        <select
-                          value={application.status}
-                          onChange={(e) =>
-                            handleStatusChange(application.id, e.target.value)
-                          }
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        >
-                          <option value="PENDING">Хүлээгдэж буй</option>
-                          <option value="ACCEPTED">Зөвшөөрөгдсөн</option>
-                          <option value="REJECTED">Татгалзсан</option>
-                        </select>
-                        {application.cv && (
-                          <a
-                            href={application.cv.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            <svg
-                              className="mr-1.5 h-4 w-4"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            CV харах
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    )}
+                  </Disclosure>
                 </li>
               ))}
             </ul>

@@ -17,27 +17,28 @@ interface Job {
 }
 
 const MONGOLIA_PROVINCES = [
-  "Архангай",
-  "Баян-Өлгий",
-  "Баянхонгор",
-  "Булган",
-  "Говь-Алтай",
-  "Говьсүмбэр",
-  "Дархан-Уул",
-  "Дорноговь",
-  "Дорнод",
-  "Дундговь",
-  "Завхан",
-  "Өвөрхангай",
-  "Өмнөговь",
-  "Сүхбаатар",
-  "Сэлэнгэ",
-  "Төв",
-  "Увс",
-  "Ховд",
-  "Хөвсгөл",
-  "Хэнтий",
   "Улаанбаатар",
+  "Архангай аймаг",
+  "Баян-Өлгий аймаг",
+  "Баянхонгор аймаг",
+  "Булган аймаг",
+  "Говь-Алтай аймаг",
+  "Говьсүмбэр аймаг",
+  "Дархан-Уул аймаг",
+  "Дорноговь аймаг",
+  "Дорнод аймаг",
+  "Дундговь аймаг",
+  "Завхан аймаг",
+  "Орхон аймаг",
+  "Өвөрхангай аймаг",
+  "Өмнөговь аймаг",
+  "Сүхбаатар аймаг",
+  "Сэлэнгэ аймаг",
+  "Төв аймаг",
+  "Увс аймаг",
+  "Ховд аймаг",
+  "Хөвсгөл аймаг",
+  "Хэнтий аймаг",
 ];
 
 const FILTERS = [
@@ -97,7 +98,7 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesProvince =
-      !selectedProvince || job.location === selectedProvince;
+      !selectedProvince || job.location.includes(selectedProvince);
     return matchesSearch && matchesProvince;
   });
 

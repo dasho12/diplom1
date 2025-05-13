@@ -4,7 +4,12 @@ import { ChatProvider } from "@/providers/ChatProvider";
 import { Header } from "@/components/Navigation";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
+});
 
 export const metadata = {
   title: "CV Analyzer",

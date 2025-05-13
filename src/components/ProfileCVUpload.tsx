@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { DocumentArrowUpIcon } from "@heroicons/react/24/outline";
 
 export default function ProfileCVUpload() {
   const { data: session } = useSession();
@@ -25,6 +26,10 @@ export default function ProfileCVUpload() {
         setFile(null);
       }
     }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   const handleUpload = async () => {
@@ -70,20 +75,30 @@ export default function ProfileCVUpload() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col space-y-2">
-        <input
-          type="file"
-          accept=".pdf,.doc,.docx"
-          onChange={handleFileChange}
-          ref={fileInputRef}
-          className="block w-full text-sm text-slate-600
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-lg file:border-0
-            file:text-sm file:font-semibold
-            file:bg-slate-900 file:text-white
-            hover:file:bg-slate-800
-            transition-colors duration-200"
-        />
+      {/* Hidden file input */}
+      <input
+        type="file"
+        accept=".pdf,.doc,.docx"
+        onChange={handleFileChange}
+        ref={fileInputRef}
+        className="hidden"
+      />
+
+      {/* Custom file input button */}
+      <div className="flex flex-col items-center justify-center w-full">
+        <button
+          type="button"
+          onClick={triggerFileInput}
+          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl bg-white hover:bg-slate-50 transition-colors duration-200"
+        >
+          <DocumentArrowUpIcon className="w-12 h-12 text-slate-400 mb-2" />
+          <span className="text-sm font-medium text-slate-600">
+            {file ? file.name : "Файл сонгох"}
+          </span>
+          <span className="text-xs text-slate-500 mt-1">
+            PDF эсвэл Word файл
+          </span>
+        </button>
       </div>
 
       {error && (
