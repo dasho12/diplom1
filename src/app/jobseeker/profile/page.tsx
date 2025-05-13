@@ -136,7 +136,7 @@ export default async function JobseekerProfilePage() {
               </div>
             )}
           </div>
-        </div>
+.        </div>
       </div>
     </div>
   );
