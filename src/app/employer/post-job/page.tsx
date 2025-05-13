@@ -178,19 +178,7 @@ export default function PostJobPageWithNewDesign() {
             </div>
 
             {/* Skills Area (Spans 3 columns) */}
-            <div className="lg:col-span-3 border border-slate-300 rounded-lg p-5 space-y-3.5">
-                <div className="flex flex-wrap gap-2.5">
-                    <SkillTag>Стратегийн төлөвлөлт</SkillTag>
-                    <SkillTag>Бизнесийн удирдлага</SkillTag>
-                    <SkillTag>Санхүүгийн менежмент</SkillTag>
-                    <SkillTag>Борлуулалтын удирдлага</SkillTag>
-                    <SkillTag>Шийдвэр гаргах чадвар</SkillTag>
-                    <SkillTag>Хэлэлцээр хийх ур чадвар</SkillTag>
-                </div>
-                <button type="button" className="p-1.5 border border-slate-500 rounded-sm hover:bg-slate-100">
-                    <PlusIcon className="w-4 h-4 text-slate-600"/>
-                </button>
-            </div>
+            
           </div>
 
           {/* Middle Section: Requirements Card */}
@@ -219,7 +207,7 @@ export default function PostJobPageWithNewDesign() {
           </div>
 
            {/* Submit Buttons - You might want to place these more prominently or differently */}
-            <div className="pt-5 flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3">
                 <Link
                     href="/employer/profile" 
                     className="px-5 py-2.5 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"

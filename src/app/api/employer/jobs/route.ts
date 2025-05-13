@@ -63,25 +63,64 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, description, location, salary, requirements } = body;
+    console.log("Received job data:", body);
 
-    const job = await prisma.job.create({
-      data: {
-        title,
-        description,
-        location,
-        salary,
-        requirements,
-        status: JobStatus.ACTIVE,
-        companyId: user.company.id,
-      },
-    });
+    const { title, description, location, salary, requirements, otherInfo, companyUrl, contactPhone, workHours, type } = body;
 
-    return NextResponse.json(job, { status: 201 });
+    if (!title) {
+      return NextResponse.json(
+        { message: "Албан тушаалыг оруулна уу" },
+        { status: 400 }
+      );
+    }
+    if (!description) {
+      return NextResponse.json(
+        { message: "Тайлбарыг оруулна уу" },
+        { status: 400 }
+      );
+    }
+    if (!location) {
+      return NextResponse.json(
+        { message: "Байршлыг сонгоно уу" },
+        { status: 400 }
+      );
+    }
+    if (!requirements) {
+      return NextResponse.json(
+        { message: "Шаардлагуудыг оруулна уу" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      const job = await prisma.job.create({
+        data: {
+          title,
+          description,
+          location,
+          salary,
+          requirements,
+          status: JobStatus.ACTIVE,
+          companyId: user.company.id,
+          companyUrl,
+          contactPhone,
+          workHours,
+          type
+        },
+      });
+
+      return NextResponse.json(job, { status: 201 });
+    } catch (error) {
+      console.error("Database error:", error);
+      return NextResponse.json(
+        { message: "Ажлын байр үүсгэхэд алдаа гарлаа: " + (error instanceof Error ? error.message : "Тодорхойгүй алдаа") },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error("Error creating job:", error);
+    console.error("API error:", error);
     return NextResponse.json(
-      { message: "Ажлын байр үүсгэхэд алдаа гарлаа" },
+      { message: "Алдаа гарлаа: " + (error instanceof Error ? error.message : "Тодорхойгүй алдаа") },
       { status: 500 }
     );
   }
