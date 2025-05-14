@@ -62,7 +62,7 @@ export default function PostJobPageWithNewDesign() {
       requirements: requirements,
       salary: formData.get("salary") as string,
       workHours: formData.get("workHours") as string,
-      type: formData.get("jobTypeSelect") as string,
+      type: formData.get("type") as string,
       companyUrl: formData.get("companyUrl") as string,
       contactPhone: formData.get("contactPhone") as string,
       otherInfo: formData.get("otherInfo") as string,
@@ -232,7 +232,7 @@ export default function PostJobPageWithNewDesign() {
                     <div>
                         <input type="text" name="salary" className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Үнэлгээ"/>
                     </div>
-                    <select name="workHours" className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400 rounded-md focus:outline-none focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`}>
+                    <select name="type" className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400 rounded-md focus:outline-none focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`}>
                         <option value="">Ажлын цаг</option>
                         <option value="FULL_TIME">Бүтэн цагийн</option>
                         <option value="PART_TIME">Цагийн</option>

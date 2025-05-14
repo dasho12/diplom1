@@ -83,18 +83,8 @@ export async function GET() {
 
     console.log(`Found ${applications.length} total applications`);
 
-    // Filter out applications without CV data
-    const validApplications = applications.filter(
-      (app) => app.cv && app.cv.fileUrl
-    );
-    console.log(`Found ${validApplications.length} valid applications with CV`);
-
-    if (validApplications.length === 0) {
-      console.log("No valid applications found");
-      return NextResponse.json([]); // Return empty array instead of error
-    }
-
-    return NextResponse.json(validApplications);
+    // Return all applications without filtering
+    return NextResponse.json(applications);
   } catch (error) {
     console.error("Error in GET /api/employer/applications:", error);
     return NextResponse.json(

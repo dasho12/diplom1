@@ -45,10 +45,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Өргөдөл олдсонгүй" }, { status: 404 });
     }
 
-    // Update application status
+    // Update application status and set viewedAt if not already set
     const updatedApplication = await prisma.jobApplication.update({
       where: { id: params.id },
-      data: { status },
+      data: {
+        status,
+        viewedAt: application.viewedAt ? application.viewedAt : new Date(),
+      },
     });
 
     return NextResponse.json(updatedApplication);

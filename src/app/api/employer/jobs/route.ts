@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { JobStatus } from "@prisma/client";
+import { JobStatus, JobType } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -30,8 +30,19 @@ export async function GET() {
     const jobs = await prisma.job.findMany({
       where: { companyId: user.company.id },
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        location: true,
+        salary: true,
+        type: true,
+        status: true,
+        createdAt: true,
+      }
     });
 
+    console.log("Found jobs:", jobs);
     return NextResponse.json(jobs);
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -63,27 +74,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-<<<<<<< HEAD
     console.log("Received job data:", body);
 
     const { title, description, location, salary, requirements, otherInfo, companyUrl, contactPhone, workHours, type } = body;
-=======
-    const { title, description, location, salary, requirements, type } = body;
 
-    const job = await prisma.job.create({
-      data: {
-        title,
-        description,
-        location,
-        salary,
-        requirements,
-        type,
-        status: JobStatus.ACTIVE,
-        companyId: user.company.id,
-      },
-    });
->>>>>>> 56f25c61d88818b2872589fafd0ab7508fe62f0c
-
+    // Validate required fields
     if (!title) {
       return NextResponse.json(
         { message: "Албан тушаалыг оруулна уу" },
@@ -109,31 +104,37 @@ export async function POST(req: Request) {
       );
     }
 
-    try {
-      const job = await prisma.job.create({
-        data: {
-          title,
-          description,
-          location,
-          salary,
-          requirements,
-          status: JobStatus.ACTIVE,
-          companyId: user.company.id,
-          companyUrl,
-          contactPhone,
-          workHours,
-          type
-        },
-      });
-
-      return NextResponse.json(job, { status: 201 });
-    } catch (error) {
-      console.error("Database error:", error);
-      return NextResponse.json(
-        { message: "Ажлын байр үүсгэхэд алдаа гарлаа: " + (error instanceof Error ? error.message : "Тодорхойгүй алдаа") },
-        { status: 500 }
-      );
+    // Validate and set job type
+    let jobType: JobType;
+    if (type && Object.values(JobType).includes(type as JobType)) {
+      jobType = type as JobType;
+    } else {
+      jobType = JobType.FULL_TIME; // Default to FULL_TIME if type is invalid or not provided
     }
+
+    // Create the job with proper company connection
+    const job = await prisma.job.create({
+      data: {
+        title,
+        description,
+        location,
+        salary,
+        requirements,
+        status: JobStatus.ACTIVE,
+        companyUrl,
+        contactPhone,
+        workHours,
+        type: jobType,
+        company: {
+          connect: { id: user.company.id }
+        }
+      },
+      include: {
+        company: true
+      }
+    });
+
+    return NextResponse.json(job, { status: 201 });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(

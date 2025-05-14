@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { ChatProvider } from "@/providers/ChatProvider";
+import { NotificationProvider } from "@/providers/NotificationProvider";
 import { Header } from "@/components/Navigation";
 import "./globals.css";
 
@@ -22,11 +23,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={inter.className}>
+      <body>
         <AuthProvider>
-          <Header />
-          <ChatProvider>{children}</ChatProvider>
+          <ChatProvider>
+            <NotificationProvider>
+              <Header />
+              {children}
+            </NotificationProvider>
+          </ChatProvider>
         </AuthProvider>
       </body>
     </html>

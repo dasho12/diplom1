@@ -17,18 +17,25 @@ export default function JobListingSection() {
           throw new Error("Failed to fetch jobs");
         }
         const data = await response.json();
+        console.log("API Response:", data);
 
         // Transform the API data to match JobListing type
-        const transformedJobs: JobListing[] = data.map((job: any) => ({
-          title: job.title,
-          type: "бҮТЭН ЦАГ", // Default type since it's not in the API
-          salary: job.salary || "Цалин: Хэлэлцээрээр",
-          company: {
-            name: job.company.name,
-            logo: "https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true", // Default logo
-            location: job.location,
-          },
-        }));
+        const transformedJobs: JobListing[] = data.map((job: any) => {
+          console.log("Job type from API:", job.type);
+          return {
+            title: job.title,
+            type: job.type === 'FULL_TIME' ? 'БҮТЭН ЦАГ' :
+                  job.type === 'PART_TIME' ? 'ЦАГИЙН' :
+                  job.type === 'CONTRACT' ? 'ГЭРЭЭТ' :
+                  job.type === 'INTERNSHIP' ? 'ДАДЛАГА' : 'БҮТЭН ЦАГ',
+            salary: job.salary || "Цалин: Хэлэлцээрээр",
+            company: {
+              name: job.company.name,
+              logo: job.company.logoUrl || "https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true",
+              location: job.location,
+            },
+          };
+        });
 
         setJobs(transformedJobs);
       } catch (err) {

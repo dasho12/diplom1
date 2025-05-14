@@ -24,19 +24,13 @@ const EmployerMenu = ({
       Ажлын байр нийтлэх
     </Link>
     <Link
-      href="/employer/jobs"
-      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-    >
-      Ажлын байрууд
-    </Link>
-    <Link
       href="/employer/applications"
       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 relative"
     >
       Анкетууд
       {newApplicationsCount > 0 && (
-        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-          {newApplicationsCount}
+        <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-5 px-1 bg-red-500 text-white text-xs rounded-full">
+          {newApplicationsCount > 99 ? '99+' : newApplicationsCount}
         </span>
       )}
     </Link>
@@ -61,9 +55,7 @@ const UserMenu = ({
     >
       Миний өргөдлүүд
       {newApplicationsCount > 0 && (
-        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-          {newApplicationsCount}
-        </span>
+        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
       )}
     </Link>
   </>
@@ -80,13 +72,14 @@ export const Header = () => {
         try {
           const endpoint =
             session.user.role === "EMPLOYER"
-              ? "/api/employer/new-applications"
-              : "/api/jobseeker/new-applications";
+              ? "/api/employer/applications/new-count"
+              : "/api/jobseeker/applications/new-count";
 
           const response = await fetch(endpoint);
           if (response.ok) {
             const data = await response.json();
-            setNewApplicationsCount(data.count);
+            console.log("New applications count:", data.count);
+            setNewApplicationsCount(data.count || 0);
           }
         } catch (error) {
           console.error("Error fetching new applications count:", error);
@@ -94,18 +87,21 @@ export const Header = () => {
       }
     };
 
-    fetchNewApplicationsCount();
-    // Set up polling every 30 seconds
-    const interval = setInterval(fetchNewApplicationsCount, 30000);
-
-    return () => clearInterval(interval);
-  }, [session]);
+    if (status === "authenticated") {
+      fetchNewApplicationsCount();
+      const interval = setInterval(fetchNewApplicationsCount, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [session, status]);
 
   const handleSignOut = async () => {
-    await signOut({ redirect: true, callbackUrl: "/" });
+    try {
+      await signOut({ redirect: true, callbackUrl: "/" });
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
-  // Close menu when clicking outside
   const closeMenu = () => {
     setShowProfileMenu(false);
   };
@@ -200,21 +196,16 @@ export const Header = () => {
                       <div className="px-4 py-2 text-sm text-[#0C213A]/60 border-b border-gray-200">
                         {session.user?.email}
                       </div>
-                      {isEmployer ? (
-                        <EmployerMenu
-                          newApplicationsCount={newApplicationsCount}
-                        />
-                      ) : (
-                        <UserMenu newApplicationsCount={newApplicationsCount} />
-                      )}
+                      <div className="py-1">
+                        {isEmployer ? (
+                          <EmployerMenu
+                            newApplicationsCount={newApplicationsCount}
+                          />
+                        ) : (
+                          <UserMenu newApplicationsCount={newApplicationsCount} />
+                        )}
+                      </div>
                       <div className="border-t border-gray-200">
-                        <Link
-                          href="/settings"
-                          className="block px-4 py-2 text-sm text-[#0C213A] hover:bg-[#0C213A]/5"
-                          onClick={closeMenu}
-                        >
-                          Тохиргоо
-                        </Link>
                         <button
                           onClick={handleSignOut}
                           className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"

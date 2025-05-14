@@ -82,6 +82,13 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+    async redirect({ url, baseUrl }) {
+      // If the user is an employer, redirect to their profile
+      if (url.startsWith(baseUrl) && url.includes("/employer")) {
+        return `${baseUrl}/employer/profile`;
+      }
+      return url;
+    }
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {

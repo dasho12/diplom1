@@ -7,41 +7,18 @@ import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { CustomEase } from "gsap/CustomEase";
+import { useNotification } from "@/providers/NotificationProvider";
 
 gsap.registerPlugin(CustomEase);
 
 export default function EmployerLoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const errorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (error) {
-      // Show error with animation
-      gsap.fromTo(errorRef.current,
-        { opacity: 0, y: -20 },
-        { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }
-      );
-
-      // Hide error after 3 seconds
-      const timer = setTimeout(() => {
-        gsap.to(errorRef.current, {
-          opacity: 0,
-          y: -20,
-          duration: 0.3,
-          ease: "power2.in",
-          onComplete: () => setError(null)
-        });
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
+  const { addNotification } = useNotification();
 
   const handleRegisterClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -89,7 +66,6 @@ export default function EmployerLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
@@ -103,18 +79,19 @@ export default function EmployerLoginPage() {
       });
 
       if (result?.error) {
-        setError(
+        addNotification(
           result.error ||
-            "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
+            "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна.",
+          "error"
         );
       } else if (result?.ok) {
         router.push("/");
       } else {
-         setError("Нэвтрэхэд тодорхойгүй алдаа гарлаа.");
+        addNotification("Нэвтрэхэд тодорхойгүй алдаа гарлаа.", "error");
       }
     } catch (error: any) {
-       console.error("Login error:", error);
-       setError(error.message || "Нэвтрэх үед системийн алдаа гарлаа.");
+      console.error("Login error:", error);
+      addNotification(error.message || "Нэвтрэх үед системийн алдаа гарлаа.", "error");
     }
   };
 
@@ -155,16 +132,6 @@ export default function EmployerLoginPage() {
 
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <form className="space-y-6" onSubmit={handleSubmit} ref={formRef}>
-                {error && (
-                  <div
-                    ref={errorRef}
-                    className="text-red-600 text-sm text-center bg-red-100 border border-red-300 p-3 rounded-lg"
-                    role="alert"
-                  >
-                    {error}
-                  </div>
-                )}
-                
                 <div className="flex flex-col gap-[25px] w-[564px] mb-[20px]">
                   <div className="flex flex-col gap-[5px]">
                     <div className="flex flex-col gap-[4px]">
