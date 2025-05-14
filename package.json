@@ -19,6 +19,7 @@
     "@types/pdf-parse": "^1.1.5",
     "bcryptjs": "^3.0.2",
     "docx": "^9.4.1",
+    "gsap": "^3.13.0",
     "mammoth": "^1.9.0",
     "mongoose": "^8.13.2",
     "multer": "^1.4.5-lts.2",

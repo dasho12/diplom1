@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,7 +11,7 @@ import {
   PhoneIcon,
   ClockIcon, 
   BuildingOfficeIcon, 
-  PhotoIcon, 
+  PhotoIcon,
   PlusCircleIcon,
   PaperAirplaneIcon,
   ArrowUturnLeftIcon,
@@ -42,6 +42,10 @@ export default function PostJobPageWithNewDesign() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,20 +54,29 @@ export default function PostJobPageWithNewDesign() {
     setSuccessMessage("");
 
     const formData = new FormData(e.currentTarget);
+    const requirements = formData.get("requirements") as string;
     const data = {
       title: formData.get("title") as string,
+      description: requirements,
+      location: formData.get("location") as string,
+      requirements: requirements,
+      salary: formData.get("salary") as string,
+      workHours: formData.get("workHours") as string,
+      type: formData.get("jobTypeSelect") as string,
       companyUrl: formData.get("companyUrl") as string,
       contactPhone: formData.get("contactPhone") as string,
-      location: formData.get("location") as string,
-      salary: formData.get("salary") as string,      // "Үнэлгээ"
-      workHours: formData.get("workHours") as string,
-      type: formData.get("jobTypeSelect") as string, 
-      requirements: formData.get("requirements") as string, // "Үндсэн тавигдах шаардлага"
-      otherInfo: formData.get("otherInfo") as string,    // "Бусад"
+      otherInfo: formData.get("otherInfo") as string,
     };
 
+    // Validate required fields
+    if (!data.title || !data.description || !data.location || !data.requirements) {
+      setError("Бүх шаардлагатай талбаруудыг бөглөнө үү");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch("/api/employer/jobs", { // Ensure this API endpoint is correct
+      const response = await fetch("/api/employer/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -71,14 +84,31 @@ export default function PostJobPageWithNewDesign() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('API Error Response:', errorData);
         throw new Error(errorData.message || "Ажлын байр нийтлэхэд алдаа гарлаа.");
       }
       setSuccessMessage("Ажлын байр амжилттай нийтлэгдлээ!");
-      e.currentTarget.reset();
+      if (formRef.current) {
+        formRef.current.reset();
+      }
+      setLogoUrl(null);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Тодорхойгүй алдаа гарлаа.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setIsUploadingLogo(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoUrl(reader.result as string);
+        setIsUploadingLogo(false);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -100,29 +130,58 @@ export default function PostJobPageWithNewDesign() {
             </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           {/* Top Section: Core Info + Skills */}
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
-            {/* Logo and Small Fields Area (Spans 5 columns) */}
-            <div className="lg:col-span-4 flex gap-6">
+            {/* Logo and Small Fields Area (Spans 3 columns) */}
+            <div className="lg:col-span-3 flex gap-6">
                 {/* Logo Area */} 
-                <div className="w-[201px] h-[201px] border border-slate-300 rounded-lg flex flex-col items-center justify-center p-4 flex-shrink-0">
-                    <PhotoIcon className="w-12 h-12 text-slate-400 mb-2" />
-                    <p className={`text-xs ${labelBaseClass} font-light text-center`}>Лого</p>
+                <div 
+                    className="w-[201px] h-[201px] border border-slate-300 rounded-lg flex flex-col items-center justify-center p-4 flex-shrink-0 cursor-pointer hover:bg-slate-50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                    />
+                    {logoUrl ? (
+                        <img 
+                            src={logoUrl} 
+                            alt="Company Logo" 
+                            className="w-full h-full object-contain"
+                            style={{ width: 'auto', height: 'auto' }}
+                        />
+                    ) : (
+                        <>
+                            <PhotoIcon className="w-12 h-12 text-slate-400 mb-2" />
+                            <p className={`text-xs ${labelBaseClass} font-light text-center`}>
+                                {isUploadingLogo ? "Лого хуулаж байна..." : "Лого"}
+                            </p>
+                        </>
+                    )}
                 </div>
                 {/* Input Fields Next to Logo */} 
-                <div className="flex-grow grid grid-cols-2 gap-x-5 gap-y-4 content-start">
-                    <div className="col-span-2">
-                        <input type="text" name="title" required className={`${"w-[450px] text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Албан тушаал..."/>
-                    </div>
-                    <div className="col-span-2">
-                        <input type="url" name="companyUrl" className={`${"w-[450px] text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Байгууллагын линк URL"/>
+                <div className="flex-grow grid grid-cols-1 gap-y-4 content-start">
+                    <div>
+                        <input type="text" name="title" required className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Албан тушаал..."/>
                     </div>
                     <div>
-                        <input type="tel" name="contactPhone" className={`${"w-[200px] text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Утас"/>
+                        <input type="url" name="companyUrl" className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Байгууллагын линк URL"/>
                     </div>
-                     <div>
-                        <div className="relative"> {/* Adjusted margin top if needed */}
+                </div>
+            </div>
+
+            {/* Job Details Area (Spans 4 columns) */}
+            <div className="lg:col-span-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <input type="tel" name="contactPhone" className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Утас"/>
+                    </div>
+                    <div>
+                        <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <MapPinIcon className="h-4 w-4 text-slate-400" />
                             </div>
@@ -130,55 +189,54 @@ export default function PostJobPageWithNewDesign() {
                                 name="location" 
                                 id="location" 
                                 required 
-                                className={`${"w-[200px] text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding} pl-10 appearance-none`} // Added appearance-none to better style select arrow if needed
+                                className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding} pl-10 appearance-none`}
                             >
-                              <option value="">Байршил сонгоно уу</option>
-                              <option value="Улаанбаатар">Улаанбаатар</option>
-                              <option value="Алсын зайнаас">Алсын зайнаас</option>
-                              <option value="Архангай аймаг">Архангай аймаг</option>
-                              <option value="Баян-Өлгий аймаг">Баян-Өлгий аймаг</option>
-                              <option value="Баянхонгор аймаг">Баянхонгор аймаг</option>
-                              <option value="Булган аймаг">Булган аймаг</option>
-                              <option value="Говь-Алтай аймаг">Говь-Алтай аймаг</option>
-                              <option value="Говьсүмбэр аймаг">Говьсүмбэр аймаг</option>
-                              <option value="Дархан-Уул аймаг">Дархан-Уул аймаг</option>
-                              <option value="Дорноговь аймаг">Дорноговь аймаг</option>
-                              <option value="Дорнод аймаг">Дорнод аймаг</option>
-                              <option value="Дундговь аймаг">Дундговь аймаг</option>
-                              <option value="Завхан аймаг">Завхан аймаг</option>
-                              <option value="Орхон аймаг">Орхон аймаг</option>
-                              <option value="Өвөрхангай аймаг">Өвөрхангай аймаг</option>
-                              <option value="Өмнөговь аймаг">Өмнөговь аймаг</option>
-                              <option value="Сүхбаатар аймаг">Сүхбаатар аймаг</option>
-                              <option value="Сэлэнгэ аймаг">Сэлэнгэ аймаг</option>
-                              <option value="Төв аймаг">Төв аймаг</option>
-                              <option value="Увс аймаг">Увс аймаг</option>
-                              <option value="Ховд аймаг">Ховд аймаг</option>
-                              <option value="Хөвсгөл аймаг">Хөвсгөл аймаг</option>
-                              <option value="Хэнтий аймаг">Хэнтий аймаг</option>
-                              <option value="Дархан">Дархан (хот)</option>
-                              <option value="Эрдэнэт">Эрдэнэт (хот)</option>
-                              <option value="Чойбалсан">Чойбалсан (хот)</option>
-                              <option value="Мөрөн">Мөрөн (хот)</option>
-                              <option value="Ховд">Ховд (хот)</option>
-                              <option value="Улаангом">Улаангом (хот)</option>
-                              <option value="Баянхонгор">Баянхонгор (хот)</option>
-                              <option value="Арвайхээр">Арвайхээр (хот)</option>
-                              <option value="Сүхбаатар">Сүхбаатар (хот)</option>
+                                <option value="">Байршил сонгоно уу</option>
+                                <option value="Улаанбаатар">Улаанбаатар</option>
+                                <option value="Алсын зайнаас">Алсын зайнаас</option>
+                                <option value="Архангай аймаг">Архангай аймаг</option>
+                                <option value="Баян-Өлгий аймаг">Баян-Өлгий аймаг</option>
+                                <option value="Баянхонгор аймаг">Баянхонгор аймаг</option>
+                                <option value="Булган аймаг">Булган аймаг</option>
+                                <option value="Говь-Алтай аймаг">Говь-Алтай аймаг</option>
+                                <option value="Говьсүмбэр аймаг">Говьсүмбэр аймаг</option>
+                                <option value="Дархан-Уул аймаг">Дархан-Уул аймаг</option>
+                                <option value="Дорноговь аймаг">Дорноговь аймаг</option>
+                                <option value="Дорнод аймаг">Дорнод аймаг</option>
+                                <option value="Дундговь аймаг">Дундговь аймаг</option>
+                                <option value="Завхан аймаг">Завхан аймаг</option>
+                                <option value="Орхон аймаг">Орхон аймаг</option>
+                                <option value="Өвөрхангай аймаг">Өвөрхангай аймаг</option>
+                                <option value="Өмнөговь аймаг">Өмнөговь аймаг</option>
+                                <option value="Сүхбаатар аймаг">Сүхбаатар аймаг</option>
+                                <option value="Сэлэнгэ аймаг">Сэлэнгэ аймаг</option>
+                                <option value="Төв аймаг">Төв аймаг</option>
+                                <option value="Увс аймаг">Увс аймаг</option>
+                                <option value="Ховд аймаг">Ховд аймаг</option>
+                                <option value="Хөвсгөл аймаг">Хөвсгөл аймаг</option>
+                                <option value="Хэнтий аймаг">Хэнтий аймаг</option>
+                                <option value="Дархан">Дархан (хот)</option>
+                                <option value="Эрдэнэт">Эрдэнэт (хот)</option>
+                                <option value="Чойбалсан">Чойбалсан (хот)</option>
+                                <option value="Мөрөн">Мөрөн (хот)</option>
+                                <option value="Ховд">Ховд (хот)</option>
+                                <option value="Улаангом">Улаангом (хот)</option>
+                                <option value="Баянхонгор">Баянхонгор (хот)</option>
+                                <option value="Арвайхээр">Арвайхээр (хот)</option>
+                                <option value="Сүхбаатар">Сүхбаатар (хот)</option>
                             </select>
                         </div>
                     </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <input type="text" name="salary" className={`${"w-[200px] text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Үнэлгээ"/>
+                        <input type="text" name="salary" className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Үнэлгээ"/>
                     </div>
                     <div>
-                        <input type="text" name="workHours" className={`${"w-[200px] text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Ажлын цаг"/>
+                        <input type="text" name="workHours" className={`${"w-full text-sm text-slate-700 border border-slate-300 placeholder-slate-400  rounded-md focus:outline-none  focus:ring-gray-500 focus:border-gray-500"} ${inputPadding}`} placeholder="Ажлын цаг"/>
                     </div>
                 </div>
             </div>
-
-            {/* Skills Area (Spans 3 columns) */}
-            
           </div>
 
           {/* Middle Section: Requirements Card */}
@@ -193,10 +251,7 @@ export default function PostJobPageWithNewDesign() {
               placeholder="Үндсэн тавигдах шаардлага: Ажилтанд тавигдах гол шаардлагууд, туршлага, боловсрол, ур чадварууд, гэрчилгээ зэргийг дэлгэрэнгүй бичнэ үү..."
             />
           </div>
-
-          {/* Bottom Section: Description / Other Card */}
           <div className=" rounded-lg">
-            {/* <label htmlFor="otherInfo" className={`${labelBaseClass} font-medium mb-2 block`}>Бусад (Нэмэлт мэдээлэл)</label> */}
             <textarea 
               id="otherInfo" 
               name="otherInfo" 

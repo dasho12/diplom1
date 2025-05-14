@@ -142,27 +142,29 @@ export default function EmployerLoginPage() {
             Бүртгүүлэх
           </a>
         </div>
-      </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-            Ажил SADFD нэвтрэх
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            Та өөрийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу
-          </p>
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-md mx-auto">
+            <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
+              Ажил SADFD нэвтрэх
+            </h1>
+            <p className="text-center text-gray-600 mb-8">
+              Та өөрийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу
+            </p>
 
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              {error && (
-                <div
-                  className="text-red-600 text-sm text-center bg-red-100 border border-red-300 p-3 rounded-lg"
-                  role="alert"
-                >
-                  {error}
-                </div>
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <form className="space-y-6" onSubmit={handleSubmit} ref={formRef}>
+                {error && (
+                  <div
+                    ref={errorRef}
+                    className="text-red-600 text-sm text-center bg-red-100 border border-red-300 p-3 rounded-lg"
+                    role="alert"
+                  >
+                    {error}
+                  </div>
+                )}
+                
                 <div className="flex flex-col gap-[25px] w-[564px] mb-[20px]">
                   <div className="flex flex-col gap-[5px]">
                     <div className="flex flex-col gap-[4px]">
@@ -201,28 +203,22 @@ export default function EmployerLoginPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between w-[564px] mb-[190px]">
-                <button type="button" className="flex items-center gap-2">
-                  <img src="/icons/google1.svg" alt="Google Icon" width={22} height={22} />
-                  <span className="text-[#0C213A] text-[14px] font-poppins">Google-ээр нэвтрэх</span>
+
+                <div className="flex items-center justify-between w-[564px] mb-[190px]">
+                  <button type="button" className="flex items-center gap-2">
+                    <img src="/icons/google1.svg" alt="Google Icon" width={22} height={22} />
+                    <span className="text-[#0C213A] text-[14px] font-poppins">Google-ээр нэвтрэх</span>
+                  </button>
+                  <a href="#" className="text-[#0C213A] text-[14px] font-light font-poppins">Нууц үг мартсан уу?</a>
+                </div>
+
+                <button type="submit" className="w-[564px] py-[13px] bg-[#0C213A] rounded-[10px] flex items-center justify-center">
+                  <span className="text-white text-[20px] font-bold font-poppins">Нэвтрэх</span>
                 </button>
-                <a href="#" className="text-[#0C213A] text-[14px] font-light font-poppins">Нууц үг мартсан уу?</a>
-              </div>
-            </div>
-            <button type="submit" className="w-[564px] py-[13px] bg-[#0C213A] rounded-[10px] flex items-center justify-center">
-              <span className="text-white text-[20px] font-bold font-poppins">Нэвтрэх</span>
-            </button>
-          </form>
-        </div>
-        {/* Error Alert */}
-        {error && (
-          <div ref={errorRef} className="fixed top-[100px] left-1/2 transform -translate-x-1/2 z-50">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 shadow-lg">
-              <p className="text-red-600 text-[16px] font-poppins">{error}</p>
+              </form>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
