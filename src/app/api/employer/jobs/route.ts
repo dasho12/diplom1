@@ -63,21 +63,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-
+<<<<<<< HEAD
     console.log("Received job data:", body);
 
-    const {
-      title,
-      description,
-      location,
-      salary,
-      requirements,
-      otherInfo,
-      companyUrl,
-      contactPhone,
-      workHours,
-      type,
-    } = body;
+    const { title, description, location, salary, requirements, otherInfo, companyUrl, contactPhone, workHours, type } = body;
+=======
+    const { title, description, location, salary, requirements, type } = body;
 
     const job = await prisma.job.create({
       data: {
