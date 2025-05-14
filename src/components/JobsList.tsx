@@ -13,6 +13,7 @@ interface Job {
   requirements: string;
   location: string;
   salary?: string;
+  type: string;
   createdAt: string;
 }
 
@@ -42,9 +43,10 @@ const MONGOLIA_PROVINCES = [
 ];
 
 const FILTERS = [
-  { label: "Өндөр цалинтай", icon: "💵" },
-  { label: "Алсаас", icon: "🏠" },
-  { label: "Хагас цагийн", icon: "⏰" },
+  { label: "Бүтэн цагийн", icon: "⏰", type: "FULL_TIME" },
+  { label: "Хагас цагийн", icon: "⏰", type: "PART_TIME" },
+  { label: "Гэрээт", icon: "📝", type: "CONTRACT" },
+  { label: "Дадлага", icon: "🎓", type: "INTERNSHIP" },
 ];
 
 interface JobsListProps {
@@ -99,7 +101,15 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
       .includes(searchTerm.toLowerCase());
     const matchesProvince =
       !selectedProvince || job.location.includes(selectedProvince);
-    return matchesSearch && matchesProvince;
+    
+    // Apply job type filters
+    const matchesType = activeFilters.length === 0 || 
+      activeFilters.some(filter => {
+        const filterType = FILTERS.find(f => f.label === filter)?.type;
+        return filterType ? job.type === filterType : true;
+      });
+
+    return matchesSearch && matchesProvince && matchesType;
   });
 
   if (loading) {
@@ -196,7 +206,10 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
             >
               {/* Badge */}
               <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
-                БҮТЭН ЦАГ
+                {job.type === 'FULL_TIME' && 'БҮТЭН ЦАГ'}
+                {job.type === 'PART_TIME' && 'ЦАГИЙН'}
+                {job.type === 'CONTRACT' && 'ГЭРЭЭТ'}
+                {job.type === 'INTERNSHIP' && 'ДАДЛАГА'}
               </span>
               {/* Logo (placeholder) */}
               <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">

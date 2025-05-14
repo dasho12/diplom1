@@ -19,6 +19,7 @@ interface Job {
   description: string;
   location: string;
   salary: string;
+  type: string;
   status: string;
   createdAt: string;
 }
@@ -147,7 +148,10 @@ export default function EmployerProfile() {
                         </h3>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           <span className="text-green-700 bg-green-50 px-2 py-1 text-xs font-semibold rounded">
-                            БҮТЭН ЦАГ
+                            {job.type === 'FULL_TIME' && 'БҮТЭН ЦАГ'}
+                            {job.type === 'PART_TIME' && 'ЦАГИЙН'}
+                            {job.type === 'CONTRACT' && 'ГЭРЭЭТ'}
+                            {job.type === 'INTERNSHIP' && 'ДАДЛАГА'}
                           </span>
                           <span className="text-black text-sm">
                             Цалин: {job.salary}
