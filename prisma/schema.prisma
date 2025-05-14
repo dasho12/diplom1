@@ -76,7 +76,6 @@ model Job {
   companyUrl   String?
   contactPhone String?
   workHours    String?
-  type         String?
 }
 
 model CV {

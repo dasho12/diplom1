@@ -63,12 +63,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-<<<<<<< HEAD
+
     console.log("Received job data:", body);
 
-    const { title, description, location, salary, requirements, otherInfo, companyUrl, contactPhone, workHours, type } = body;
-=======
-    const { title, description, location, salary, requirements, type } = body;
+    const {
+      title,
+      description,
+      location,
+      salary,
+      requirements,
+      otherInfo,
+      companyUrl,
+      contactPhone,
+      workHours,
+      type,
+    } = body;
 
     const job = await prisma.job.create({
       data: {
@@ -82,7 +91,6 @@ export async function POST(req: Request) {
         companyId: user.company.id,
       },
     });
->>>>>>> 56f25c61d88818b2872589fafd0ab7508fe62f0c
 
     if (!title) {
       return NextResponse.json(
@@ -122,7 +130,7 @@ export async function POST(req: Request) {
           companyUrl,
           contactPhone,
           workHours,
-          type
+          type,
         },
       });
 
@@ -130,14 +138,22 @@ export async function POST(req: Request) {
     } catch (error) {
       console.error("Database error:", error);
       return NextResponse.json(
-        { message: "Ажлын байр үүсгэхэд алдаа гарлаа: " + (error instanceof Error ? error.message : "Тодорхойгүй алдаа") },
+        {
+          message:
+            "Ажлын байр үүсгэхэд алдаа гарлаа: " +
+            (error instanceof Error ? error.message : "Тодорхойгүй алдаа"),
+        },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(
-      { message: "Алдаа гарлаа: " + (error instanceof Error ? error.message : "Тодорхойгүй алдаа") },
+      {
+        message:
+          "Алдаа гарлаа: " +
+          (error instanceof Error ? error.message : "Тодорхойгүй алдаа"),
+      },
       { status: 500 }
     );
   }
