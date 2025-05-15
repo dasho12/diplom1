@@ -58,20 +58,20 @@ export default function EmployerProfile() {
   };
 
   const handleDeleteJob = async (jobId: string) => {
-    if (window.confirm('Энэ ажлын байрыг устгахдаа итгэлтэй байна уу?')) {
+    if (window.confirm("Энэ ажлын байрыг устгахдаа итгэлтэй байна уу?")) {
       try {
         const response = await fetch(`/api/employer/jobs/${jobId}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
-        
+
         if (response.ok) {
-          setJobs(jobs.filter(job => job.id !== jobId));
+          setJobs(jobs.filter((job) => job.id !== jobId));
         } else {
-          alert('Ажлын байрыг устгахад алдаа гарлаа');
+          alert("Ажлын байрыг устгахад алдаа гарлаа");
         }
       } catch (error) {
-        console.error('Error deleting job:', error);
-        alert('Ажлын байрыг устгахад алдаа гарлаа');
+        console.error("Error deleting job:", error);
+        alert("Ажлын байрыг устгахад алдаа гарлаа");
       }
     }
   };
@@ -148,10 +148,10 @@ export default function EmployerProfile() {
                         </h3>
                         <div className="flex flex-wrap items-center gap-2 mt-1">
                           <span className="text-green-700 bg-green-50 px-2 py-1 text-xs font-semibold rounded">
-                            {job.type === 'FULL_TIME' && 'БҮТЭН ЦАГ'}
-                            {job.type === 'PART_TIME' && 'ЦАГИЙН'}
-                            {job.type === 'CONTRACT' && 'ГЭРЭЭТ'}
-                            {job.type === 'INTERNSHIP' && 'ДАДЛАГА'}
+                            {job.type === "FULL_TIME" && "БҮТЭН ЦАГ"}
+                            {job.type === "PART_TIME" && "ЦАГИЙН"}
+                            {job.type === "CONTRACT" && "ГЭРЭЭТ"}
+                            {job.type === "INTERNSHIP" && "ДАДЛАГА"}
                           </span>
                           <span className="text-black text-sm">
                             Цалин: {job.salary}

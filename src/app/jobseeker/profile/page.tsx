@@ -16,7 +16,7 @@ export default async function JobseekerProfilePage() {
     redirect("/login?error=Unauthorized");
   }
 
-  const user = await prisma.user.findUnique({
+  const user = (await prisma.user.findUnique({
     where: {
       id: session.user.id,
     },
@@ -40,7 +40,7 @@ export default async function JobseekerProfilePage() {
         },
       },
     },
-  }) as any;
+  })) as any;
 
   if (!user) {
     return (
@@ -71,14 +71,40 @@ export default async function JobseekerProfilePage() {
                 <UserCircleIcon className="h-28 w-28 text-gray-400" />
               )}
             </div>
-            <h2 className="font-bold text-3xl mb-6 text-black tracking-tight text-center">{user.name}</h2>
+            <h2 className="font-bold text-3xl mb-6 text-black tracking-tight text-center">
+              {user.name}
+            </h2>
             <div className="w-full flex flex-col gap-4 mb-6">
               <div className="flex items-center gap-3 bg-white border-2 border-gray-200 rounded-xl px-5 py-3 shadow-sm">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 01-8 0m8 0V8a4 4 0 00-8 0v4m8 0a4 4 0 01-8 0m8 0v4a4 4 0 01-8 0v-4" /></svg>
+                <svg
+                  className="w-6 h-6 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16 12a4 4 0 01-8 0m8 0V8a4 4 0 00-8 0v4m8 0a4 4 0 01-8 0m8 0v4a4 4 0 01-8 0v-4"
+                  />
+                </svg>
                 <span className="text-black text-lg">{user.email}</span>
               </div>
               <div className="flex items-center gap-3 bg-white border-2 border-gray-200 rounded-xl px-5 py-3 shadow-sm">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 007.48 19h9.04a2 2 0 001.83-1.3L17 13M7 13V6a1 1 0 011-1h5a1 1 0 011 1v7" /></svg>
+                <svg
+                  className="w-6 h-6 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 5h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7A2 2 0 007.48 19h9.04a2 2 0 001.83-1.3L17 13M7 13V6a1 1 0 011-1h5a1 1 0 011 1v7"
+                  />
+                </svg>
                 <span className="text-black text-lg">{user.phoneNumber}</span>
               </div>
             </div>
@@ -89,7 +115,19 @@ export default async function JobseekerProfilePage() {
               href="/jobseeker/profile/edit"
               className="mt-6 flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-500 text-white rounded-full font-semibold shadow-lg hover:from-indigo-600 hover:to-blue-600 transition text-lg w-full max-w-xs"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6 6M3 21h18" /></svg>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.232 5.232l3.536 3.536M9 11l6 6M3 21h18"
+                />
+              </svg>
               Профайл засах
             </Link>
           </div>
@@ -105,7 +143,9 @@ export default async function JobseekerProfilePage() {
                   className="bg-white rounded-2xl p-7 shadow-lg flex flex-col sm:flex-row justify-between items-center text-black border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition duration-200"
                 >
                   <div>
-                    <div className="font-semibold text-base text-black">{cv.fileName}</div>
+                    <div className="font-semibold text-base text-black">
+                      {cv.fileName}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1 text-black">
                       Огноо: {new Date(cv.createdAt).toLocaleDateString()}
                     </div>
@@ -136,7 +176,8 @@ export default async function JobseekerProfilePage() {
               </div>
             )}
           </div>
-.        </div>
+          .{" "}
+        </div>
       </div>
     </div>
   );

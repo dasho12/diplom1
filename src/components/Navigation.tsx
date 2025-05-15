@@ -89,23 +89,26 @@ export const Header = () => {
             setNewApplicationsCount(data.count);
           }
         } catch (error) {
-          console.error("Error fetching new applications count:", error);
+          // Алдаа гарвал энд боловсруулна
         }
       }
     };
 
-    fetchNewApplicationsCount();
-    // Set up polling every 30 seconds
-    const interval = setInterval(fetchNewApplicationsCount, 30000);
-
-    return () => clearInterval(interval);
-  }, [session]);
+    if (status === "authenticated") {
+      fetchNewApplicationsCount();
+      const interval = setInterval(fetchNewApplicationsCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [session, status]);
 
   const handleSignOut = async () => {
-    await signOut({ redirect: true, callbackUrl: "/" });
+    try {
+      await signOut({ redirect: true, callbackUrl: "/" });
+    } catch (error) {
+      // Алдаа гарвал энд боловсруулна
+    }
   };
 
-  // Close menu when clicking outside
   const closeMenu = () => {
     setShowProfileMenu(false);
   };

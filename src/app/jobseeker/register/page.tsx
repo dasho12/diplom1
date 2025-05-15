@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
+import { signIn } from "next-auth/react";
 
 export default function JobseekerRegisterPage() {
   const router = useRouter();
@@ -324,7 +325,16 @@ export default function JobseekerRegisterPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between w-[564px] mb-[40px]">
-                <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="flex items-center gap-2"
+                  onClick={() =>
+                    signIn("google", {
+                      callbackUrl: "/",
+                      expectedRole: "USER",
+                    })
+                  }
+                >
                   <img
                     src="/icons/google1.svg"
                     alt="Google Icon"
@@ -334,7 +344,7 @@ export default function JobseekerRegisterPage() {
                   <span className="text-[#0C213A] text-[14px] font-poppins">
                     Google-ээр бүртгүүлэх
                   </span>
-                </div>
+                </button>
                 <Link
                   href="/employer/register"
                   className="text-[#0C213A] text-[14px] font-light font-poppins"
