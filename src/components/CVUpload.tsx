@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useChat } from "@/providers/ChatProvider";
-import { DocumentArrowUpIcon } from "@heroicons/react/24/outline";
+import { useNotification } from "@/providers/NotificationProvider";
 
 interface JobMatch {
   job: {
@@ -26,7 +26,7 @@ interface JobMatch {
 
 interface CVUploadProps {
   onAnalysisStart: () => void;
-  onAnalysisComplete: (analysis: string, matches: JobMatch[] | null) => void;
+  onAnalysisComplete: (analysis: string, fileUrl: string | null) => void;
 }
 
 export default function CVUpload({
@@ -36,25 +36,23 @@ export default function CVUpload({
   const { data: session } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { sendMessage } = useChat();
+  const { addNotification } = useNotification();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (
-        selectedFile.type === "application/pdf" ||
-        selectedFile.type ===
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-        selectedFile.type === "application/msword"
-      ) {
-        setFile(selectedFile);
-        setError(null);
-      } else {
-        setError("Please upload a PDF or Word document");
-        setFile(null);
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        addNotification("Файлын хэмжээ 5MB-ээс хэтэрч байна", "error");
+        return;
       }
+      if (!selectedFile.type.includes("pdf")) {
+        addNotification("Зөвхөн PDF файл оруулна уу", "error");
+        return;
+      }
+      setFile(selectedFile);
+      addNotification("Файл сонгогдлоо", "info");
     }
   };
 
@@ -62,17 +60,14 @@ export default function CVUpload({
     if (!file) return;
 
     setUploading(true);
-    setError(null);
     onAnalysisStart();
 
-    // Show initial loading message
     await sendMessage("CV-г боловсруулж байна. Түр хүлээнэ үү...");
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Upload CV and get analysis
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
@@ -88,43 +83,15 @@ export default function CVUpload({
         throw new Error("CV analysis failed");
       }
 
-      // Send the analysis to chat
       await sendMessage(`CV Шинжилгээ:\n\n${data.analysis}`);
-
-      // Show loading message for job matches
       await sendMessage("Ажлын байруудыг хайж байна...");
-
-      if (data.matches && data.matches.length > 0) {
-        // Send job matches to chat
-        const matchesMessage = data.matches
-          .map(
-            (match: JobMatch) =>
-              `Ажлын байр: ${match.job.title}\nКомпани: ${
-                match.job.company.name
-              }\nТохиролт: ${Math.round(
-                match.matchScore
-              )}%\n\nТохиролтын дэлгэрэнгүй:\n- Туршлага: ${Math.round(
-                match.matchDetails.experience
-              )}%\n- Ур чадвар: ${Math.round(
-                match.matchDetails.skills
-              )}%\n- Боловсрол: ${Math.round(match.matchDetails.education)}%`
-          )
-          .join("\n\n");
-        await sendMessage(
-          `Таны CV-тэй тохирох ажлын байрууд:\n\n${matchesMessage}`
-        );
-        onAnalysisComplete(data.analysis, data.matches);
-      } else {
-        await sendMessage(
-          "Уучлаарай, таны CV-тэй тохирох ажлын байр олдсонгүй. Дараах зүйлсийг хийж болно:\n\n1. CV-гээ сайжруулах\n2. Илүү олон ур чадвар нэмэх\n3. Дараа дахин оролдох"
-        );
-        onAnalysisComplete(data.analysis, null);
-      }
+      addNotification("CV амжилттай байршуулагдлаа", "success");
+      onAnalysisComplete(data.analysis, data.fileUrl);
     } catch (error) {
       console.error("Upload error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to upload CV";
-      setError(errorMessage);
+      addNotification(errorMessage, "error");
       await sendMessage(
         `Уучлаарай, CV-г боловсруулахад алдаа гарлаа:\n\n${errorMessage}\n\nДараах зүйлсийг хийж болно:\n1. CV-гээ шалгаад дахин оролдох\n2. Хэдэн минут хүлээгээд дахин оролдох\n3. Чат функцээр CV-гээ дэлгэрэнгүй шинжилгээ хийх`
       );
@@ -147,59 +114,83 @@ export default function CVUpload({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
-        <label className="text-base font-medium text-slate-900">
-          CV-гээ байршуулах (PDF эсвэл Word)
-        </label>
+    <div className="w-full max-w-2xl mx-auto">
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">CV байршуулах</h2>
+            <button
+              onClick={triggerFileInput}
+              className="px-4 py-2 text-sm font-medium text-white bg-[#0C213A] rounded-lg hover:bg-[#0C213A]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0C213A]"
+            >
+              Файл сонгох
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf"
+              className="hidden"
+            />
+          </div>
 
-        {/* Hidden file input */}
-        <input
-          type="file"
-          accept=".pdf,.doc,.docx"
-          onChange={handleFileChange}
-          ref={fileInputRef}
-          className="hidden"
-        />
+          {file && (
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setFile(null)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
 
-        {/* Custom file input button */}
-        <div className="flex flex-col items-center justify-center w-full">
           <button
-            type="button"
-            onClick={triggerFileInput}
-            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl bg-white hover:bg-slate-50 transition-colors duration-200"
+            onClick={handleUpload}
+            disabled={!file || uploading}
+            className={`w-full px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0C213A] ${
+              !file || uploading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#0C213A] hover:bg-[#0C213A]/90"
+            }`}
           >
-            <DocumentArrowUpIcon className="w-12 h-12 text-slate-400 mb-2" />
-            <span className="text-sm font-medium text-slate-600">
-              {file ? file.name : "Файл сонгох"}
-            </span>
-            <span className="text-xs text-slate-500 mt-1">
-              PDF эсвэл Word файл
-            </span>
+            {uploading ? "Байршуулж байна..." : "Байршуулах"}
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded-lg text-red-700">
-          {error}
-        </div>
-      )}
-
-      {file && (
-        <button
-          onClick={handleUpload}
-          disabled={uploading}
-          className={`w-full py-3 px-6 rounded-xl text-white font-medium transition-colors duration-200
-            ${
-              uploading
-                ? "bg-slate-400 cursor-not-allowed"
-                : "bg-slate-900 hover:bg-slate-800"
-            }`}
-        >
-          {uploading ? "Байршуулж байна..." : "CV байршуулах"}
-        </button>
-      )}
     </div>
   );
 }

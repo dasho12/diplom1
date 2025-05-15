@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
     },
     responseLimit: '10mb',
   },
+  images: {
+    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

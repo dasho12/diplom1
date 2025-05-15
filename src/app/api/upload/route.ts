@@ -191,7 +191,7 @@ function generateFallbackAnalysis(content: string): string {
   }
 
 Сайжруулах Хэсгүүд:
-- Ур чадварын хэсгийг дэлгэрэнгүй бичих
+- Ур чадварын хэсгийг тодорхойлно уу
 - Ажлын туршлагыг тоон үзүүлэлтээр харуулах
 - Боловсролын мэдээллийг тодорхой бичих
 
@@ -335,9 +335,14 @@ export async function POST(req: Request) {
           fileName: file.name,
           content: content,
           analysis: analysis,
-          status: "COMPLETED",
+          status: "PENDING",
+          fileUrl: `/uploads/${Date.now()}-${file.name}`,
         },
       });
+
+      // Save file to public directory
+      const uploadDir = join(process.cwd(), 'public', 'uploads');
+      await writeFile(join(uploadDir, `${Date.now()}-${file.name}`), buffer);
 
       // Calculate job matches
       const matches = await calculateJobMatches(content);

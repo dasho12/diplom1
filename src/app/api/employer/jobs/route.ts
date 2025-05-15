@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { JobStatus } from "@prisma/client";
+import { JobStatus, JobType } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -30,8 +30,19 @@ export async function GET() {
     const jobs = await prisma.job.findMany({
       where: { companyId: user.company.id },
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        location: true,
+        salary: true,
+        type: true,
+        status: true,
+        createdAt: true,
+      },
     });
 
+    console.log("Found jobs:", jobs);
     return NextResponse.json(jobs);
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -79,19 +90,7 @@ export async function POST(req: Request) {
       type,
     } = body;
 
-    const job = await prisma.job.create({
-      data: {
-        title,
-        description,
-        location,
-        salary,
-        requirements,
-        type,
-        status: JobStatus.ACTIVE,
-        companyId: user.company.id,
-      },
-    });
-
+    // Validate required fields
     if (!title) {
       return NextResponse.json(
         { message: "Албан тушаалыг оруулна уу" },

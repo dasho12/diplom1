@@ -7,12 +7,12 @@ import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { CustomEase } from "gsap/CustomEase";
+import { useNotification } from "@/providers/NotificationProvider";
 
 gsap.registerPlugin(CustomEase);
 
 export default function EmployerLoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -107,7 +107,6 @@ export default function EmployerLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
@@ -121,9 +120,10 @@ export default function EmployerLoginPage() {
       });
 
       if (result?.error) {
-        setError(
+        addNotification(
           result.error ||
-            "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна."
+            "Имэйл, нууц үг буруу эсвэл танд нэвтрэх эрх байхгүй байна.",
+          "error"
         );
       } else if (result?.ok) {
         router.push("/");
@@ -170,10 +170,10 @@ export default function EmployerLoginPage() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-[110px]">
           <div className="max-w-md mx-auto">
             <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-              Ажил SADFD нэвтрэх
+              Ажил олгогч нэвтрэх
             </h1>
             <p className="text-center text-gray-600 mb-8">
               Та өөрийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу

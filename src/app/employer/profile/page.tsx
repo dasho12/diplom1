@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Company {
   id: string;
@@ -11,6 +12,7 @@ interface Company {
   description: string;
   location: string;
   website: string;
+  logoUrl?: string;
 }
 
 interface Job {
@@ -30,14 +32,20 @@ export default function EmployerProfile() {
   const [company, setCompany] = useState<Company | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
-    } else if (status === "authenticated") {
-      fetchCompanyAndJobs();
+    } else if (status === "authenticated" && !hasLoaded) {
+      if (session?.user?.role === "EMPLOYER") {
+        fetchCompanyAndJobs();
+        setHasLoaded(true);
+      } else {
+        router.push("/login");
+      }
     }
-  }, [status]);
+  }, [status, session, hasLoaded]);
 
   const fetchCompanyAndJobs = async () => {
     try {
@@ -49,6 +57,7 @@ export default function EmployerProfile() {
       // Fetch jobs data
       const jobsRes = await fetch("/api/employer/jobs");
       const jobsData = await jobsRes.json();
+      console.log("Jobs data from API:", jobsData); // Debug log
       setJobs(jobsData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -94,21 +103,86 @@ export default function EmployerProfile() {
               <h2 className="text-2xl font-bold mb-4 text-black">
                 Байгууллагын мэдээлэл
               </h2>
-              <div className="space-y-3 text-black">
-                <div>
-                  <span className="font-semibold">Байгууллагын нэр:</span>{" "}
-                  {company?.name}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-20 h-20 relative rounded-lg bg-gray-100 overflow-hidden">
+                  {company?.logoUrl ? (
+                    <Image
+                      src={company.logoUrl}
+                      alt={`${company.name} logo`}
+                      fill
+                      className="object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/images/default-company-logo.svg";
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src="/images/default-company-logo.svg"
+                      alt="Default company logo"
+                      fill
+                      className="object-contain"
+                    />
+                  )}
                 </div>
-                <div>
-                  <span className="font-semibold">Байгууллагын Email:</span>{" "}
-                  {session?.user?.email}
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    id="logo-upload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        try {
+                          const response = await fetch(
+                            "/api/employer/upload-logo",
+                            {
+                              method: "POST",
+                              body: formData,
+                            }
+                          );
+                          if (response.ok) {
+                            const data = await response.json();
+                            setCompany((prev) =>
+                              prev ? { ...prev, logoUrl: data.imageUrl } : null
+                            );
+                          } else {
+                            alert("Лого хуулах үед алдаа гарлаа");
+                          }
+                        } catch (error) {
+                          console.error("Error uploading logo:", error);
+                          alert("Лого хуулах үед алдаа гарлаа");
+                        }
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="logo-upload"
+                    className="px-3 py-1.5 text-sm bg-blue-900 text-white rounded-md hover:bg-blue-800 transition-colors cursor-pointer text-center"
+                  >
+                    Лого солих
+                  </label>
                 </div>
-                <div>
-                  <span className="font-semibold">Холбоо барих:</span> 90099810
-                </div>
-                <div>
-                  <span className="font-semibold">Хаяг:</span>{" "}
-                  {company?.location}
+                <div className="space-y-3 text-black">
+                  <div>
+                    <span className="font-semibold">Байгууллагын нэр:</span>{" "}
+                    {company?.name}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Байгууллагын Email:</span>{" "}
+                    {session?.user?.email}
+                  </div>
+                  <div>
+                    <span className="font-semibold">Холбоо барих:</span>{" "}
+                    90099810
+                  </div>
+                  <div>
+                    <span className="font-semibold">Хаяг:</span>{" "}
+                    {company?.location}
+                  </div>
                 </div>
               </div>
               <Link
@@ -137,11 +211,27 @@ export default function EmployerProfile() {
                     className="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
                   >
                     <div className="flex items-center gap-4">
-                      <img
-                        src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
-                        alt="logo"
-                        className="w-14 h-14 object-contain rounded-lg bg-gray-100"
-                      />
+                      <div className="w-14 h-14 relative rounded-lg bg-gray-100 overflow-hidden">
+                        {company?.logoUrl ? (
+                          <Image
+                            src={company.logoUrl}
+                            alt={`${company.name} logo`}
+                            fill
+                            className="object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/images/default-company-logo.svg";
+                            }}
+                          />
+                        ) : (
+                          <Image
+                            src="/images/default-company-logo.svg"
+                            alt="Default company logo"
+                            fill
+                            className="object-contain"
+                          />
+                        )}
+                      </div>
                       <div>
                         <h3 className="text-lg font-semibold text-black">
                           {job.title}

@@ -40,6 +40,8 @@ export async function GET(req: Request) {
             "3-5 жилийн маркетингийн туршлага, сошиал медиа, цахим маркетинг мэдлэгтэй, бүтээлч сэтгэлгээ, багийн ажил, баг удирдах чадвар, англи хэл мэдлэг (туслах), судалгаа хийх, хэрэглэгчийн зан төлөв ойлгох чадвартай байх",
           location: "Улаанбаатар",
           salary: "₮3,000,000 - ₮5,000,000",
+          type: "FULL_TIME",
+          status: "ACTIVE",
           company: {
             connect: { id: company.id },
           },
@@ -53,6 +55,7 @@ export async function GET(req: Request) {
       return NextResponse.json([job]);
     }
 
+    console.log("Returning existing jobs:", jobs);
     return NextResponse.json(jobs);
   } catch (error) {
     console.error("Error fetching jobs:", error);

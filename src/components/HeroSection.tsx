@@ -2,8 +2,9 @@
 
 import type { StatCard } from "./types";
 import Spline from "@splinetool/react-spline";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const MONGOLIA_PROVINCES = [
   "Архангай",
@@ -70,8 +71,39 @@ const StatCard = ({ icon, value, label }: StatCard) => (
 
 export const HeroSection = () => {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [showHeroNotif, setShowHeroNotif] = useState(false);
+  const [lastCount, setLastCount] = useState(0);
+  const notifTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const fetchNewApplications = async () => {
+      try {
+        const response = await fetch("/api/employer/applications");
+        if (response.ok) {
+          const data = await response.json();
+          // Only count PENDING and unviewed applications
+          const newPending = data.filter(
+            (app: any) => app.status === "PENDING" && !app.viewedAt
+          );
+          if (newPending.length > 0 && newPending.length > lastCount) {
+            setShowHeroNotif(true);
+            if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
+            notifTimeoutRef.current = setTimeout(() => setShowHeroNotif(false), 5000);
+          }
+          setLastCount(newPending.length);
+        }
+      } catch {}
+    };
+    fetchNewApplications();
+    const interval = setInterval(fetchNewApplications, 5000);
+    return () => {
+      clearInterval(interval);
+      if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
+    };
+  }, [lastCount]);
 
   const handleSearch = () => {
     const queryParams = new URLSearchParams();
@@ -90,8 +122,25 @@ export const HeroSection = () => {
     }
   };
 
+  // Show notification зөвхөн employer нэвтэрсэн үед
+  const isEmployer = status === "authenticated" && session?.user?.role === "EMPLOYER";
+
   return (
     <section className="w-full min-h-[80vh] self-center px-32 w-full max-md:pt-8 max-md:max-w-full relative">
+      {isEmployer && showHeroNotif && (
+        <div className="fixed top-8 right-8 z-50 flex justify-end items-start">
+          <div className="bg-blue-500 text-white px-5 py-3 rounded-xl shadow-lg font-semibold text-base flex items-center gap-3 animate-fade-in-out relative min-w-[200px]">
+            <span>Шинэ анкет ирлээ!</span>
+            <button
+              onClick={() => setShowHeroNotif(false)}
+              className="ml-2 text-white/80 hover:text-white text-lg font-bold absolute top-2 right-2"
+              aria-label="Хаах"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {/* Spline background */}
       <div className="absolute inset-0 z-0">
         <Spline scene="https://prod.spline.design/hNC5B1RNfKCeT0ny/scene.splinecode" />
