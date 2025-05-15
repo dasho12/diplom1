@@ -3,8 +3,6 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
-    console.log("Fetching jobs...");
-
     // Check if we have any jobs
     const jobs = await prisma.job.findMany({
       include: {
@@ -15,12 +13,8 @@ export async function GET(req: Request) {
       },
     });
 
-    console.log("Found jobs:", jobs.length);
-
     // If no jobs exist, create sample jobs
     if (jobs.length === 0) {
-      console.log("No jobs found, creating sample jobs...");
-
       // First create a default company
       const company = await prisma.company.create({
         data: {
@@ -51,14 +45,11 @@ export async function GET(req: Request) {
         },
       });
 
-      console.log("Created new job:", job);
       return NextResponse.json([job]);
     }
 
-    console.log("Returning existing jobs:", jobs);
     return NextResponse.json(jobs);
   } catch (error) {
-    console.error("Error fetching jobs:", error);
     return NextResponse.json(
       { error: "Failed to fetch jobs" },
       { status: 500 }
@@ -96,7 +87,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(job);
   } catch (error) {
-    console.error("Error creating job:", error);
     return NextResponse.json(
       { error: "Failed to create job" },
       { status: 500 }

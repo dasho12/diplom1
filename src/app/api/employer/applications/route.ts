@@ -5,18 +5,14 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    console.log("Starting to fetch employer applications...");
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      console.log("Authentication failed: No session or email");
       return NextResponse.json(
         { error: "Нэвтэрсэн байх шаардлагатай" },
         { status: 401 }
       );
     }
-
-    console.log("User email:", session.user.email);
 
     // Get user with company info
     const user = await prisma.user.findUnique({
@@ -30,22 +26,21 @@ export async function GET() {
     });
 
     if (!user) {
-      console.log("User not found or not an employer");
       return NextResponse.json(
-        { error: "Ажил олгогч хэрэглэгч олдсонгүй" },
+        {
+          error:
+            "Та ажил олгогч эрхгүй байна. Эхлээд ажил олгогчоор бүртгүүлнэ үү.",
+        },
         { status: 404 }
       );
     }
 
     if (!user.company) {
-      console.log("No company associated with user");
       return NextResponse.json(
         { error: "Таны компани олдсонгүй. Эхлээд компани бүртгүүлнэ үү." },
         { status: 404 }
       );
     }
-
-    console.log("Fetching applications for company:", user.company.id);
 
     // Get all applications for jobs posted by this company
     const applications = await prisma.jobApplication.findMany({
@@ -81,9 +76,6 @@ export async function GET() {
       },
     });
 
-    console.log(`Found ${applications.length} total applications`);
-
-    // Return all applications without filtering
     return NextResponse.json(applications);
   } catch (error) {
     console.error("Error in GET /api/employer/applications:", error);

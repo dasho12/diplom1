@@ -19,6 +19,8 @@ export default function EmployerLoginPage() {
   const imageRef = useRef<HTMLImageElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
+  const { addNotification } = useNotification();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (error) {
