@@ -88,15 +88,15 @@ export const Header = () => {
     };
 
     if (status === "authenticated") {
-      fetchNewApplicationsCount();
+    fetchNewApplicationsCount();
       const interval = setInterval(fetchNewApplicationsCount, 5000);
-      return () => clearInterval(interval);
+    return () => clearInterval(interval);
     }
   }, [session, status]);
 
   const handleSignOut = async () => {
     try {
-      await signOut({ redirect: true, callbackUrl: "/" });
+    await signOut({ redirect: true, callbackUrl: "/" });
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -197,13 +197,13 @@ export const Header = () => {
                         {session.user?.email}
                       </div>
                       <div className="py-1">
-                        {isEmployer ? (
-                          <EmployerMenu
-                            newApplicationsCount={newApplicationsCount}
-                          />
-                        ) : (
-                          <UserMenu newApplicationsCount={newApplicationsCount} />
-                        )}
+                      {isEmployer ? (
+                        <EmployerMenu
+                          newApplicationsCount={newApplicationsCount}
+                        />
+                      ) : (
+                        <UserMenu newApplicationsCount={newApplicationsCount} />
+                      )}
                       </div>
                       <div className="border-t border-gray-200">
                         <button

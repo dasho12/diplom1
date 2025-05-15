@@ -121,10 +121,10 @@ export default function EmployerLoginPage() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 mt-[110px]">
           <div className="max-w-md mx-auto">
             <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
-              Ажил SADFD нэвтрэх
+              Ажил олгогч нэвтрэх
             </h1>
             <p className="text-center text-gray-600 mb-8">
               Та өөрийн бүртгэлтэй имэйл хаяг, нууц үгээ оруулна уу

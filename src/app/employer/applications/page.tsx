@@ -4,7 +4,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Disclosure } from "@headlessui/react";
-import { ChevronUpIcon, BriefcaseIcon } from "@heroicons/react/24/solid";
+import { ChevronUpIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
 import { useNotification } from "@/providers/NotificationProvider";
 
 interface JobApplication {
@@ -202,16 +203,24 @@ export default function EmployerApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 pt-[100px]">
+      <div className="max-w-full mx-auto px-32">
         <div className="md:flex md:items-center md:justify-between mb-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-[#0C213A] text-[24px] font-bold font-poppins">
-              Ирсэн өргөдлүүд
-            </h1>
-            <p className="mt-1 text-[#0C213A]/60 text-[14px] font-poppins">
-              Нийт {applications.length} өргөдөл
-            </p>
+          <div className="flex items-center gap-4">
+            <Image
+              src="/icons/application.svg"
+              alt="Application"
+              width={100}
+              height={100}
+            />
+            <div>
+              <h1 className="text-[#0C213A] text-[24px] font-bold font-poppins">
+                Ирсэн өргөдлүүд
+              </h1>
+              <p className="mt-1 text-[#0C213A]/60 text-[14px] font-poppins">
+                Нийт {applications.length} өргөдөл
+              </p>
+            </div>
           </div>
         </div>
 
@@ -238,102 +247,101 @@ export default function EmployerApplicationsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {jobs.map(([jobId, { title, applications }]) => (
               <Disclosure key={jobId}>
                 {({ open }) => (
-                  <div className="bg-white rounded-lg shadow">
-                    <Disclosure.Button className="flex w-full justify-between rounded-lg px-4 py-4 text-left text-sm font-medium focus:outline-none focus-visible:ring focus-visible:ring-[#0C213A] focus-visible:ring-opacity-75">
+                  <div className="bg-white rounded-xl shadow-lg">
+                    <Disclosure.Button className="flex w-full justify-between rounded-xl px-5 py-5 text-left text-base font-semibold focus:outline-none focus-visible:ring focus-visible:ring-[#0C213A] focus-visible:ring-opacity-75">
                       <div className="flex items-center">
-                        <BriefcaseIcon className="h-5 w-5 text-[#0C213A]/60 mr-2" />
-                        <span className="text-[#0C213A]">{title}</span>
-                        <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0C213A]/10 text-[#0C213A]">
+                        <Image
+                          src="/icons/application.svg"
+                          alt="Application"
+                          width={40}
+                          height={40}
+                          className="mr-2"
+                        />
+                        <span className="text-[#0C213A] text-lg font-bold">{title}</span>
+                        <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-[#0C213A]/10 text-[#0C213A]">
                           {applications.length} өргөдөл
                         </span>
                       </div>
                       <ChevronUpIcon
-                        className={`${
-                          open ? "rotate-180 transform" : ""
-                        } h-5 w-5 text-[#0C213A]/60`}
+                        className={`${open ? "rotate-180 transform" : ""} h-6 w-6 text-[#0C213A]/60`}
                       />
                     </Disclosure.Button>
-                    <Disclosure.Panel className="px-4 pb-4 pt-2 text-sm text-gray-500">
+                    <Disclosure.Panel className="px-5 pb-5 pt-2 text-sm text-gray-700">
                       <div className="space-y-4">
                         {applications.map((application) => (
                           <div
                             key={application.id}
-                            className="border rounded-lg p-4 hover:bg-gray-50"
+                            className="border border-[#0C213A]/10 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-all shadow flex flex-col gap-3"
                           >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-medium text-[#0C213A]">
-                                  {application.user.name}
-                                </h4>
-                                <p className="text-sm text-[#0C213A]/60">
-                                  {application.user.email}
-                                </p>
+                            {/* Main row: name, email, status, actions */}
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                                <h4 className="font-bold text-[#0C213A] text-lg">{application.user.name}</h4>
+                                <span className="text-base text-[#0C213A]/70">{application.user.email}</span>
+                                <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-semibold ${getStatusColor(application.status)}`}>{getStatusText(application.status)}</span>
+                                <span className="text-sm text-[#0C213A]/50 ml-2">{new Date(application.createdAt).toLocaleDateString()}</span>
                               </div>
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  application.status === "PENDING"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : application.status === "ACCEPTED"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
-                                }`}
-                              >
-                                {application.status === "PENDING"
-                                  ? "Хүлээгдэж буй"
-                                  : application.status === "ACCEPTED"
-                                  ? "Зөвшөөрөгдсөн"
-                                  : "Татгалзсан"}
-                              </span>
+                              {/* Approve/Reject buttons for PENDING applications */}
+                              {application.status === "PENDING" && (
+                                <div className="flex gap-2 mt-2 md:mt-0">
+                                  <button
+                                    onClick={() => handleStatusChange(application.id, "ACCEPTED")}
+                                    className="px-4 py-1.5 text-sm bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 transition-colors font-thin shadow flex items-center"
+                                  >
+                                    <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Зөвшөөрөх
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusChange(application.id, "REJECTED")}
+                                    className="px-4 py-1.5 text-sm bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 transition-colors font-thin shadow flex items-center"
+                                  >
+                                    <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Татгалзах
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                            {application.message && (
-                              <p className="mt-2 text-sm text-[#0C213A]/80">
-                                {application.message}
-                              </p>
-                            )}
-                            {application.cv && (
-                              <a
-                                href={application.cv.fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-2 inline-flex items-center text-sm text-[#0C213A] hover:text-[#0C213A]/80"
-                              >
-                                <svg
-                                  className="h-4 w-4 mr-1"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                  />
-                                </svg>
-                                CV татах
-                              </a>
-                            )}
-                            {/* Approve/Reject buttons for PENDING applications */}
-                            {application.status === "PENDING" && (
-                              <div className="mt-4 flex gap-2">
-                                <button
-                                  onClick={() => handleStatusChange(application.id, "ACCEPTED")}
-                                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                                >
-                                  Зөвшөөрөх
-                                </button>
-                                <button
-                                  onClick={() => handleStatusChange(application.id, "REJECTED")}
-                                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                >
-                                  Татгалзах
-                                </button>
+                            {/* Extra info: message, CV */}
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-1">
+                              <div className="flex-1">
+                                {application.message && (
+                                  <div className="mb-2">
+                                    <span className="block text-[#0C213A] text-base font-semibold mb-1">Нэмэлт мэдээлэл:</span>
+                                    <p className="text-[#0C213A]/90 text-base bg-white rounded p-2 border border-[#0C213A]/10">{application.message}</p>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                              {application.cv && (
+                                <a
+                                  href={application.cv.fileUrl}
+                                  download
+                                  className="mt-2 inline-flex items-center text-sm text-[#0C213A] hover:text-[#0C213A]/80"
+                                >
+                                  <svg
+                                    className="h-4 w-4 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    />
+                                  </svg>
+                                  CV татах
+                                </a>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
