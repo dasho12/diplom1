@@ -61,9 +61,29 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-slate-900 mb-6">
             AI CV Шинжилгээ
           </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8">
             CV-гээ байршуулж, AI-ийн тусламжтайгаар шууд шинжилгээгээ авна уу
           </p>
+          <Link
+            href="/jobs"
+            className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-[#0C213A] rounded-lg hover:bg-[#0C213A]/90 transition-colors"
+          >
+            Бүх ажлын байруудыг харах
+            <svg
+              className="w-5 h-5 ml-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </Link>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-200">
@@ -148,8 +168,12 @@ export default function Home() {
                 ) : jobMatches.length > 0 ? (
                   <div className="flex flex-col gap-4">
                     {jobMatches.map((match) => (
-                      <Link href={`/jobs/${match.job.id}`} key={match.job.id}>
-                        <div className="bg-white shadow rounded-lg p-4 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 cursor-pointer">
+                      <Link
+                        href={`/jobs?selectedJob=${match.job.id}`}
+                        key={match.job.id}
+                        className="block hover:shadow-md transition-shadow duration-200"
+                      >
+                        <div className="bg-white shadow rounded-lg p-4 flex items-center gap-4">
                           {/* Match Score Badge */}
                           <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
                             {Math.round(match.matchScore)}% ТОХИРОЛТ
@@ -179,28 +203,21 @@ export default function Home() {
                               </p>
                             )}
                           </div>
-                          {/* Bookmark icon */}
-                          <button
-                            className="ml-2 p-2 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
-                            aria-label="Bookmark job"
-                            tabIndex={-1}
-                            onClick={(e) => e.preventDefault()}
+                          {/* Arrow icon */}
+                          <svg
+                            className="w-5 h-5 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
                           >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                              />
-                            </svg>
-                          </button>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
                         </div>
                       </Link>
                     ))}

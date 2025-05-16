@@ -91,7 +91,10 @@ export const HeroSection = () => {
           if (newPending.length > 0 && newPending.length > lastCount) {
             setShowHeroNotif(true);
             if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
-            notifTimeoutRef.current = setTimeout(() => setShowHeroNotif(false), 5000);
+            notifTimeoutRef.current = setTimeout(
+              () => setShowHeroNotif(false),
+              5000
+            );
           }
           setLastCount(newPending.length);
         }
@@ -123,7 +126,8 @@ export const HeroSection = () => {
   };
 
   // Show notification зөвхөн employer нэвтэрсэн үед
-  const isEmployer = status === "authenticated" && session?.user?.role === "EMPLOYER";
+  const isEmployer =
+    status === "authenticated" && session?.user?.role === "EMPLOYER";
 
   return (
     <section className="w-full min-h-[80vh] self-center px-32 w-full max-md:pt-8 max-md:max-w-full relative">

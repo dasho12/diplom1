@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import JobsList from "@/components/JobsList";
 import JobDetails from "@/components/JobDetails";
+import { JSX } from "react";
 
 interface Job {
   id: string;
@@ -32,8 +33,19 @@ export default function JobsPage() {
             <JobsList onJobSelect={setSelectedJob} />
           </div>
           {/* Right: Job Details */}
-          <div className="hidden lg:block">
-            <JobDetails job={selectedJob} />
+          <div className="hidden  lg:block">
+            {selectedJob ? (
+              <JobDetails job={selectedJob} />
+            ) : (
+              <div className="bg-white rounded-lg shadow p-8 text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Ажлын байр сонгоно уу
+                </h3>
+                <p className="text-gray-500">
+                  Дэлгэрэнгүй мэдээллийг харахын тулд ажлын байрыг сонгоно уу
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </main>

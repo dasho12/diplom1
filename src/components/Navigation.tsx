@@ -29,7 +29,7 @@ const EmployerMenu = ({
     >
       Анкетууд
       {newApplicationsCount > 0 && (
-        <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-5 px-1 bg-red-500 text-white text-xs rounded-full">
+        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-5 px-1 bg-red-500 text-white text-xs rounded-full">
           {newApplicationsCount > 99 ? "99+" : newApplicationsCount}
         </span>
       )}
@@ -55,7 +55,9 @@ const UserMenu = ({
     >
       Миний өргөдлүүд
       {newApplicationsCount > 0 && (
-        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-5 px-1 bg-red-500 text-white text-xs rounded-full">
+          {newApplicationsCount > 99 ? "99+" : newApplicationsCount}
+        </span>
       )}
     </Link>
   </>
@@ -78,7 +80,6 @@ export const Header = () => {
           const response = await fetch(endpoint);
           if (response.ok) {
             const data = await response.json();
-            console.log("New applications count:", data.count);
             setNewApplicationsCount(data.count || 0);
           }
         } catch (error) {

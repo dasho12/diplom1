@@ -81,6 +81,16 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
       }
 
       setJobs(data);
+
+      // If there's a selected job in the URL, find and select it
+      const selectedJobId = searchParams.get("selectedJob");
+      if (selectedJobId) {
+        const job = data.find((j: Job) => j.id === selectedJobId);
+        if (job) {
+          setSelectedJob(job);
+          onJobSelect(job);
+        }
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to fetch jobs");
     } finally {
@@ -101,11 +111,12 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
       .includes(searchTerm.toLowerCase());
     const matchesProvince =
       !selectedProvince || job.location.includes(selectedProvince);
-    
+
     // Apply job type filters
-    const matchesType = activeFilters.length === 0 || 
-      activeFilters.some(filter => {
-        const filterType = FILTERS.find(f => f.label === filter)?.type;
+    const matchesType =
+      activeFilters.length === 0 ||
+      activeFilters.some((filter) => {
+        const filterType = FILTERS.find((f) => f.label === filter)?.type;
         return filterType ? job.type === filterType : true;
       });
 
@@ -151,7 +162,7 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
         ))}
       </div>
       {/* Search and select in a row */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-4 mb-6">
         <input
           type="text"
           placeholder="Мэргэжил хайх..."
@@ -189,75 +200,75 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
         </button>
       </div>
       {/* Job cards vertical list */}
-      {filteredJobs.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">Ажлын байр олдсонгүй.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {filteredJobs.map((job) => (
-            <div
-              key={job.id}
-              className="bg-white shadow rounded-lg p-4 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 cursor-pointer"
-              onClick={() => {
-                setSelectedJob(job);
-                onJobSelect(job);
-              }}
-            >
-              {/* Badge */}
-              <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
-                {job.type === 'FULL_TIME' && 'БҮТЭН ЦАГ'}
-                {job.type === 'PART_TIME' && 'ЦАГИЙН'}
-                {job.type === 'CONTRACT' && 'ГЭРЭЭТ'}
-                {job.type === 'INTERNSHIP' && 'ДАДЛАГА'}
-              </span>
-              {/* Logo (placeholder) */}
-              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
-                <img
-                  src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
-                  alt="logo"
-                  className="w-10 h-10 object-contain"
-                />
-              </div>
-              {/* Job info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 truncate">
-                  {job.title}
-                </h3>
-                <p className="text-md text-gray-600 truncate">
-                  {job.company.name}
-                </p>
-                <p className="text-sm text-gray-500 truncate">{job.location}</p>
-                {job.salary && (
-                  <p className="text-sm text-gray-500 truncate">{job.salary}</p>
-                )}
-              </div>
-              {/* Bookmark icon */}
-              <button
-                className="ml-2 p-2 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Bookmark job"
-                tabIndex={-1}
-                onClick={(e) => e.preventDefault()}
+      <div className="h-[calc(100vh-24rem)] overflow-y-auto pr-4">
+        {filteredJobs.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600">Ажлын байр олдсонгүй.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {filteredJobs.map((job) => (
+              <div
+                key={job.id}
+                className={`bg-white shadow rounded-lg p-4 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 cursor-pointer ${
+                  selectedJob?.id === job.id ? "ring-2 ring-blue-500" : ""
+                }`}
+                onClick={() => {
+                  setSelectedJob(job);
+                  onJobSelect(job);
+                }}
               >
+                {/* Badge */}
+                <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
+                  {job.type === "FULL_TIME" && "БҮТЭН ЦАГ"}
+                  {job.type === "PART_TIME" && "ЦАГИЙН"}
+                  {job.type === "CONTRACT" && "ГЭРЭЭТ"}
+                  {job.type === "INTERNSHIP" && "ДАДЛАГА"}
+                </span>
+                {/* Logo (placeholder) */}
+                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
+                  <img
+                    src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
+                    alt="logo"
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+                {/* Job info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                    {job.title}
+                  </h3>
+                  <p className="text-md text-gray-600 truncate">
+                    {job.company.name}
+                  </p>
+                  <p className="text-sm text-gray-500 truncate">
+                    {job.location}
+                  </p>
+                  {job.salary && (
+                    <p className="text-sm text-gray-500 truncate">
+                      {job.salary}
+                    </p>
+                  )}
+                </div>
+                {/* Arrow icon */}
                 <svg
-                  className="w-5 h-5"
+                  className="w-5 h-5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                    d="M9 5l7 7-7 7"
                   />
                 </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
