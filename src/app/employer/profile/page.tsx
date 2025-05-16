@@ -33,6 +33,10 @@ export default function EmployerProfile() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedCompany, setEditedCompany] = useState<Company | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -47,6 +51,12 @@ export default function EmployerProfile() {
     }
   }, [status, session, hasLoaded]);
 
+  useEffect(() => {
+    if (company) {
+      setEditedCompany(company);
+    }
+  }, [company]);
+
   const fetchCompanyAndJobs = async () => {
     try {
       const companyRes = await fetch("/api/employer/company");
@@ -59,6 +69,70 @@ export default function EmployerProfile() {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      let logoUrl = company?.logoUrl;
+
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        const uploadRes = await fetch('/api/upload/company-logo', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!uploadRes.ok) {
+          throw new Error('Failed to upload logo');
+        }
+        
+        const uploadData = await uploadRes.json();
+        logoUrl = uploadData.url;
+      }
+
+      const response = await fetch('/api/employer/company/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editedCompany?.name,
+          location: editedCompany?.location,
+          logoUrl: logoUrl,
+          description: editedCompany?.description,
+          website: editedCompany?.website
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update company profile');
+      }
+
+      const updatedCompany = await response.json();
+      setCompany(updatedCompany);
+      setIsEditing(false);
+      setLogoFile(null);
+      setLogoPreview(null);
+      
+      // Show success message
+      alert('Профайл амжилттай шинэчлэгдлээ');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Профайл шинэчлэхэд алдаа гарлаа. Дараа дахин оролдоно уу.');
     }
   };
 
@@ -93,54 +167,120 @@ export default function EmployerProfile() {
       {/* Header хэсэг */}
       <div className="bg-white shadow-sm rounded-b-xl px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between mx-auto">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 relative rounded-md bg-gray-100 overflow-hidden">
-            {company?.logoUrl ? (
-              <Image
-                src={company.logoUrl}
-                alt={`${company.name} logo`}
-                fill
-                className="object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/images/default-company-logo.svg";
-                }}
-              />
-            ) : (
-              <Image
-                src="/images/default-company-logo.svg"
-                alt="Default company logo"
-                fill
-                className="object-contain"
-              />
+          <div className="relative group">
+            <div className="w-16 h-16 relative rounded-md bg-gray-100 overflow-hidden">
+              {logoPreview || company?.logoUrl ? (
+                <Image
+                  src={logoPreview || company?.logoUrl || ''}
+                  alt={`${company?.name} logo`}
+                  fill
+                  className="object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/images/default-company-logo.svg";
+                  }}
+                />
+              ) : (
+                <Image
+                  src="/images/default-company-logo.svg"
+                  alt="Default company logo"
+                  fill
+                  className="object-contain"
+                />
+              )}
+            </div>
+            {isEditing && (
+              <label className="absolute inset-0 bg-black bg-opacity-50 rounded-md flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoChange}
+                />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="white" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+              </label>
             )}
           </div>
           <div>
-            <div className="text-2xl font-bold text-[#0C213A]">{company?.name || 'Таны компанийн нэр'}</div>
-            <div className="flex flex-wrap gap-4 text-slate-600 text-sm mt-1 items-center">
-              <span className="flex items-center gap-2">
-                <Image src="/icons/mail.svg" alt="email icon" width={20} height={20} />
-                {session?.user?.email || 'info@company.mn'}
-              </span>
-              <span>|</span>
-              <span className="flex items-center gap-2">
-                <Image src="/icons/phone.svg" alt="phone icon" width={20} height={20} />
-                90099810
-              </span>
-              <span>|</span>
-              <span className="flex items-center gap-2">
-                <Image src="/icons/location2.svg" alt="location icon" width={20} height={20} />
-                {company?.location || 'Улаанбаатар, Монгол'}
-              </span>
-            </div>
+            {isEditing ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={editedCompany?.name || ''}
+                  onChange={(e) => setEditedCompany(prev => prev ? {...prev, name: e.target.value} : null)}
+                  className="text-2xl font-bold text-[#0C213A] bg-gray-50 rounded-md px-3 py-1 w-full"
+                  placeholder="Компанийн нэр"
+                />
+                <input
+                  type="text"
+                  value={editedCompany?.location || ''}
+                  onChange={(e) => setEditedCompany(prev => prev ? {...prev, location: e.target.value} : null)}
+                  className="text-slate-600 text-sm bg-gray-50 rounded-md px-3 py-1 w-full"
+                  placeholder="Байршил"
+                />
+              </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-[#0C213A]">{company?.name || 'Таны компанийн нэр'}</div>
+                <div className="flex flex-wrap gap-4 text-slate-600 text-sm mt-1 items-center">
+                  <span className="flex items-center gap-2">
+                    <Image src="/icons/mail.svg" alt="email icon" width={20} height={20} />
+                    {session?.user?.email || 'info@company.mn'}
+                  </span>
+                  <span>|</span>
+                  <span className="flex items-center gap-2">
+                    <Image src="/icons/phone.svg" alt="phone icon" width={20} height={20} />
+                    90099810
+                  </span>
+                  <span>|</span>
+                  <span className="flex items-center gap-2">
+                    <Image src="/icons/location2.svg" alt="location icon" width={20} height={20} />
+                    {company?.location || 'Улаанбаатар, Монгол'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        <div className="mt-4 md:mt-0">
-          <Link
-            href="/employer/post-job"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition"
-          >
-            Ажлын байр нийтлэх
-          </Link>
+        <div className="mt-4 md:mt-0 flex gap-3">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleSaveProfile}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition"
+              >
+                Хадгалах
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditedCompany(company);
+                  setLogoFile(null);
+                  setLogoPreview(null);
+                }}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-6 py-2 rounded-lg shadow transition"
+              >
+                Цуцлах
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-6 py-2 rounded-lg shadow transition"
+              >
+                Профайл засах
+              </button>
+              <Link
+                href="/employer/post-job"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition"
+              >
+                Ажлын байр нийтлэх
+              </Link>
+            </>
+          )}
         </div>
       </div>
 

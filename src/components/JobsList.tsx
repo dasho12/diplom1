@@ -8,6 +8,7 @@ interface Job {
   title: string;
   company: {
     name: string;
+    logoUrl?: string;
   };
   description: string;
   requirements: string;
@@ -225,13 +226,25 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
                   {job.type === "CONTRACT" && "ГЭРЭЭТ"}
                   {job.type === "INTERNSHIP" && "ДАДЛАГА"}
                 </span>
-                {/* Logo (placeholder) */}
-                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
-                  <img
-                    src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
-                    alt="logo"
-                    className="w-10 h-10 object-contain"
-                  />
+                {/* Company Logo */}
+                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4 overflow-hidden">
+                  {job.company.logoUrl ? (
+                    <img
+                      src={job.company.logoUrl}
+                      alt={`${job.company.name} logo`}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/images/default-company-logo.svg";
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src="/images/default-company-logo.svg"
+                      alt="Default company logo"
+                      className="w-10 h-10 object-contain"
+                    />
+                  )}
                 </div>
                 {/* Job info */}
                 <div className="flex-1 min-w-0">

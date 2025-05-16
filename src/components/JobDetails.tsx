@@ -18,6 +18,7 @@ interface Job {
   title: string;
   company: {
     name: string;
+    logoUrl?: string;
   };
   description: string;
   requirements: string;
@@ -105,12 +106,24 @@ export default function JobDetails({ job }: JobDetailsProps) {
   return (
     <div className="bg-white shadow rounded-lg p-8 min-h-[500px]">
       <div className="flex items-center gap-4 mb-6">
-        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center">
-          <img
-            src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
-            alt="logo"
-            className="w-14 h-14 object-contain"
-          />
+        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+          {job.company.logoUrl ? (
+            <img
+              src={job.company.logoUrl}
+              alt={`${job.company.name} logo`}
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/images/default-company-logo.svg";
+              }}
+            />
+          ) : (
+            <img
+              src="/images/default-company-logo.svg"
+              alt="Default company logo"
+              className="w-14 h-14 object-contain"
+            />
+          )}
         </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{job.title}</h2>
