@@ -106,9 +106,9 @@ export const Header = () => {
   const isEmployer = session?.user?.role === "EMPLOYER";
 
   return (
-    <header className="flex flex-col justify-center px-32 py-3 w-full bg-white min-h-[70px] shadow-[0_2px_10px_rgba(0,0,0,0.1)] max-md:px-5 max-md:max-w-full fixed top-0 z-50">
-      <nav className="flex flex-wrap gap-8 justify-between items-center w-full max-w-[1420px] mx-auto max-md:max-w-full">
-        <div className="flex flex-wrap gap-8 items-center min-w-60 text-[#0C213A] max-md:max-w-full">
+    <header className="flex flex-col justify-center px-0 md:px-32 py-3 w-full bg-white min-h-[70px] shadow-[0_2px_8px_rgba(12,33,58,0.10)] max-md:px-5 max-md:max-w-full fixed top-0 z-50 text-lg">
+      <nav className="flex flex-wrap gap-10 justify-between items-center w-full max-w-[1600px] mx-auto max-md:max-w-full">
+        <div className="flex flex-wrap gap-25 items-center min-w-60 text-[#0C213A] max-md:max-w-full">
           <Link
             href="/"
             className="text-2xl font-bold tracking-tight text-[#0C213A]"

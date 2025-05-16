@@ -203,7 +203,7 @@ export default function EmployerApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 pt-[100px]">
+    <div className="min-h-screen bg-white py-8 pt-[130px]">
       <div className="max-w-full mx-auto px-32">
         <div className="md:flex md:items-center md:justify-between mb-4">
           <div className="flex items-center gap-4">
@@ -251,7 +251,7 @@ export default function EmployerApplicationsPage() {
             {jobs.map(([jobId, { title, applications }]) => (
               <Disclosure key={jobId}>
                 {({ open }) => (
-                  <div className="bg-white rounded-xl shadow-lg">
+                  <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(12,33,58,0.08)]">
                     <Disclosure.Button className="flex w-full justify-between rounded-xl px-5 py-5 text-left text-base font-semibold focus:outline-none focus-visible:ring focus-visible:ring-[#0C213A] focus-visible:ring-opacity-75">
                       <div className="flex items-center">
                         <Image
@@ -275,7 +275,7 @@ export default function EmployerApplicationsPage() {
                         {applications.map((application) => (
                           <div
                             key={application.id}
-                            className="border border-[#0C213A]/10 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-all shadow flex flex-col gap-3"
+                            className="border border-[#0C213A]/5 rounded-lg p-4 bg-white transition-all shadow-[0_1px_2px_rgba(12,33,58,0.05)] flex flex-col gap-3"
                           >
                             {/* Main row: name, email, status, actions */}
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -315,7 +315,7 @@ export default function EmployerApplicationsPage() {
                                 {application.message && (
                                   <div className="mb-2">
                                     <span className="block text-[#0C213A] text-base font-semibold mb-1">Нэмэлт мэдээлэл:</span>
-                                    <p className="text-[#0C213A]/90 text-base bg-white rounded p-2 border border-[#0C213A]/10">{application.message}</p>
+                                    <p className="text-[#0C213A]/90 text-base bg-white rounded p-2">{application.message}</p>
                                   </div>
                                 )}
                               </div>
