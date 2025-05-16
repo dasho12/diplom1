@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        poppins: ['Poppins', 'sans-serif'],
+      },
       keyframes: {
         'slide-in': {
           '0%': { transform: 'translateX(100%)' },
