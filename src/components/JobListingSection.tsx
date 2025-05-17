@@ -50,8 +50,8 @@ export default function JobListingSection() {
 
   if (loading) {
     return (
-      <div className="py-24 px-4 w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
-        <div className="max-w-7xl mx-auto text-center">
+      <div className="pb-24 w-full">
+        <div className="mx-auto text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800 mx-auto"></div>
           <p className="mt-4 text-gray-600">
             Ажлын байруудыг ачааллаж байна...
@@ -63,8 +63,8 @@ export default function JobListingSection() {
 
   if (error) {
     return (
-      <div className="py-24 px-4 w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
-        <div className="max-w-7xl mx-auto text-center">
+      <div className="w-full bg-white">
+        <div className="max-w-7xl text-center">
           <p className="text-red-600">Алдаа гарлаа: {error}</p>
         </div>
       </div>
@@ -72,9 +72,9 @@ export default function JobListingSection() {
   }
 
   return (
-    <section className="py-24 px-4 w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+    <section className="pb-15 w-full px-32">
+      <div className="">
+        <div className="text-center mb-20">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent mb-4">
             Онцлох компаниуд
           </h2>
@@ -83,10 +83,21 @@ export default function JobListingSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jobs.map((job, index) => (
-            <AnimatedJobCard key={index} job={job} index={index} />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-between gap-5">
+          {jobs
+            .slice() // clone array
+            .sort((a, b) => {
+              // Extract numeric salary, treat non-numeric as 0
+              const getSalary = (s: string) => {
+                const num = parseInt(s.replace(/[^\d]/g, ""));
+                return isNaN(num) ? 0 : num;
+              };
+              return getSalary(b.salary) - getSalary(a.salary);
+            })
+            .slice(0, 6)
+            .map((job, index) => (
+              <AnimatedJobCard key={index} job={job} index={index} />
+            ))}
         </div>
 
         <div className="mt-16 text-center">

@@ -1,7 +1,6 @@
 "use client";
 
 import type { StatCard } from "./types";
-import Spline from "@splinetool/react-spline";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -53,16 +52,16 @@ const stats: StatCard[] = [
   },
 ];
 
-const StatCard = ({ icon, value, label }: StatCard) => (
-  <article className="flex gap-[20px] items-center bg-white rounded-[10px] w-[280px] h-[90px] px-4 py-[12px] shadow-[4px_4px_8px_rgba(189,195,199,0.75)]">
+const StatCard = ({ icon, value, label, className }: StatCard & { className?: string }) => (
+  <article className={`flex gap-[20px] items-center bg-white rounded-[10px] w-[320px] h-[90px] px-6 py-4 shadow-[4px_4px_8px_rgba(189,195,199,0.75)] ${className}`}>
     <div className="flex items-center justify-center p-3 rounded bg-[#0C213A]">
       <img src={icon} className="w-8 h-8 object-contain" alt="" />
     </div>
-    <div className="flex flex-col gap-[4px]">
-      <p className="text-lg font-medium leading-6 text-[#18191C] font-['Inter']">
+    <div className="flex flex-col gap-[10px]">
+      <p className="text-xl font-semibold leading-6 text-[#0C213A] font-poppins">
         {value}
       </p>
-      <p className="text-xs font-normal leading-4 text-[#767F8C] font-['Inter']">
+      <p className="text-sm font-medium leading-4 text-[#0C213A]/60 font-poppins">
         {label}
       </p>
     </div>
@@ -130,7 +129,7 @@ export const HeroSection = () => {
     status === "authenticated" && session?.user?.role === "EMPLOYER";
 
   return (
-    <section className="w-full min-h-[80vh] self-center px-32 w-full max-md:pt-8 max-md:max-w-full relative">
+    <section className="px-32">
       {isEmployer && showHeroNotif && (
         <div className="fixed top-8 right-8 z-50 flex justify-end items-start">
           <div className="bg-blue-500 text-white px-5 py-3 rounded-xl shadow-lg font-semibold text-base flex items-center gap-3 animate-fade-in-out relative min-w-[200px]">
@@ -145,65 +144,83 @@ export const HeroSection = () => {
           </div>
         </div>
       )}
-      {/* Spline background */}
-      <div className="absolute inset-0 z-0">
-        <Spline scene="https://prod.spline.design/hNC5B1RNfKCeT0ny/scene.splinecode" />
-      </div>
+      
 
       {/* Content container */}
-      <div className="container mx-auto relative z-10">
-        <div className="flex flex-col lg:flex-row items-center justify-between min-h-[80vh] gap-16">
+      <div className="container relative z-10">
+        <div className="flex flex-col lg:flex-row items-center justify-between min-h-[80vh]">
           {/* Left side - Text content */}
-          <div className="flex flex-col max-w-full w-[55%] relative z-10">
+          <div className="flex flex-col max-w-full w-[45%] relative z-10 pt-30">
             <div className="w-full font-semibold text-[#0C213A] max-md:max-w-full">
-              <h2 className="text-5xl leading-[60px] max-md:max-w-full max-md:text-4xl max-md:leading-[52px]">
-                Ажлын байрууд нээлттэй Мөрөөдлийн ажлаа сонгоорой!
+              <h2 className="text-7xl leading-[60px] max-md:max-w-full max-md:text-4xl max-md:leading-[52px] font-poppins font-bold">
+                <span className="block mb-6">Your Dream Job</span>
+                <span className="block mb-6">is Waiting Browse</span>
+                <span className="block">Our Open Roles!</span>
               </h2>
-              <p className="text-base leading-6 max-md:max-w-full pt-4">
+              <p className="text-base leading-6 max-md:max-w-full pt-6 font-poppins font-medium">
                 Амжилттай карьерын эхлэлийг тавих шилдэг ажлыг хайж байна уу?
               </p>
-              <p>Энд олон боломж бий !!!</p>
+              <p className="font-poppins font-medium">Энд олон боломж бий !!!</p>
             </div>
-            <div className="flex flex-wrap gap-4 items-center self-start mt-8 max-md:mt-6 max-md:max-w-full">
+            <div className="flex gap-2 mb-6 pt-15 max-md:mt-6 max-md:max-w-full">
               <input
                 type="text"
                 placeholder="Мэргэжил хайх..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="gap-2.5 self-stretch py-4 pr-24 pl-5 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-[#0C213A] text-[#0C213A]/60 max-md:pr-5 bg-white/80 backdrop-blur-sm relative z-10"
+                className="flex-[2] px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-400 hover:border-slate-900 focus:border-slate-900 font-medium text-gray-900 text-sm"
               />
-              <select
-                value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
-                className="flex gap-10 items-center self-stretch px-6 py-4 my-auto text-sm font-medium leading-none rounded-xl border border-solid border-[#0C213A] min-h-[52px] min-w-60 text-[#0C213A] w-[250px] max-md:px-5 bg-white/80 backdrop-blur-sm relative z-10"
-              >
-                <option value="">Бүх хот</option>
-                {MONGOLIA_PROVINCES.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
+              <div className="relative w-60">
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-slate-400 hover:border-slate-900 focus:border-slate-900 font-medium text-gray-500 text-sm appearance-none"
+                >
+                  <option value="">Бүх хот</option>
+                  {MONGOLIA_PROVINCES.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+                {/* Custom dropdown icon */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                  <img src="/icons/sum.svg" alt="Dropdown" className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
               <button
                 onClick={handleSearch}
-                className="flex overflow-hidden gap-2.5 items-center self-stretch p-4 my-auto rounded-xl bg-[#0C213A] h-[52px] w-[52px] hover:bg-[#0C213A]/90 transition-colors relative z-10"
+                className="bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center"
               >
-                <img
-                  src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/492220f772f4a785c9d6dff4e5ce3c39ba4e500e?placeholderIfAbsent=true"
-                  className="object-contain self-stretch my-auto w-5 aspect-square"
-                  alt="Search"
-                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"
+                  />
+                </svg>
               </button>
             </div>
+          </div>
+          {/* Right side - Hero icon */}
+          <div className="flex items-center justify-end w-[45%] relative z-10 pt-30 p-0 m-0">
+            <img src="/icons/hero.svg" alt="Hero" className="w-[600px] h-[560px] object-cover p-0 m-0" />
           </div>
         </div>
       </div>
 
       {/* Доорх статистикууд */}
-      <div className="flex flex-row gap-10 items-center max-md:max-w-full relative z-10">
+      <div className="flex flex-row gap-10 items-center max-md:max-w-full relative z-10 justify-between pt-10">
         {stats.map((stat, index) => (
-          <StatCard key={index} {...stat} />
+          <StatCard key={index} {...stat} className="font-poppins" />
         ))}
       </div>
     </section>

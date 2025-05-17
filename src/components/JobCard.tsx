@@ -81,17 +81,11 @@ export const JobCard = ({ title, type, salary, company }: JobListing) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${colors.gradient}`}
-      ></div>
-
       <div className="p-6">
         <div className="flex flex-col">
           <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
           <div className="flex flex-wrap gap-2 items-center mb-4">
-            <span
-              className={`px-3 py-1 text-sm font-medium text-white bg-gradient-to-r ${colors.badge} rounded-full`}
-            >
+            <span className="px-3 py-1 text-sm font-semibold text-[#0BA02C] bg-[#E7F6EA] rounded-full">
               {type}
             </span>
             <span className={`text-sm px-3 py-1 rounded-full ${colors.salary}`}>
@@ -102,16 +96,11 @@ export const JobCard = ({ title, type, salary, company }: JobListing) => {
 
         <div className="flex items-center pt-4 border-t border-gray-100">
           <div className="relative mr-4">
-            <div
-              className={`w-12 h-12 rounded-lg bg-gradient-to-br ${colors.logo} p-1`}
-            >
-              <img
-                src={company.logo}
-                className="w-full h-full object-contain rounded-lg bg-white"
-                alt={company.name}
-              />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-800 rounded-full border-2 border-white"></div>
+            <img
+              src={company.logo}
+              className="w-12 h-12 object-contain rounded-lg"
+              alt={company.name}
+            />
           </div>
 
           <div className="flex-1">
