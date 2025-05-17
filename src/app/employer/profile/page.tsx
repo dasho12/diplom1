@@ -53,6 +53,8 @@ export default function EmployerProfile() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [newApplicationsCount, setNewApplicationsCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -78,8 +80,13 @@ export default function EmployerProfile() {
       const fetchApplications = async () => {
         try {
           const res = await fetch("/api/employer/applications");
-          const data = await res.json();
-          setApplications(data);
+          const text = await res.text();
+          if (!text) {
+            setApplications([]);
+          } else {
+            const data = JSON.parse(text);
+            setApplications(data);
+          }
         } catch (e) {
           setApplications([]);
         }
@@ -103,8 +110,13 @@ export default function EmployerProfile() {
       try {
         const res = await fetch("/api/employer/applications/new-count");
         if (res.ok) {
-          const data = await res.json();
-          setNewApplicationsCount(data.count || 0);
+          const text = await res.text();
+          if (!text) {
+            setNewApplicationsCount(0);
+          } else {
+            const data = JSON.parse(text);
+            setNewApplicationsCount(data.count || 0);
+          }
         }
       } catch (e) {
         setNewApplicationsCount(0);
@@ -116,11 +128,20 @@ export default function EmployerProfile() {
   const fetchCompanyAndJobs = async () => {
     try {
       const companyRes = await fetch("/api/employer/company");
-      const companyData = await companyRes.json();
+      const text = await companyRes.text();
+      if (!text) {
+        throw new Error("Хоосон хариу ирлээ");
+      }
+      const companyData = JSON.parse(text);
       setCompany(companyData);
       const jobsRes = await fetch("/api/employer/jobs");
-      const jobsData = await jobsRes.json();
-      setJobs(jobsData);
+      const textJobs = await jobsRes.text();
+      if (!textJobs) {
+        setJobs([]);
+      } else {
+        const jobsData = JSON.parse(textJobs);
+        setJobs(jobsData);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -156,7 +177,11 @@ export default function EmployerProfile() {
           throw new Error("Failed to upload logo");
         }
 
-        const uploadData = await uploadRes.json();
+        const text = await uploadRes.text();
+        if (!text) {
+          throw new Error("Хоосон хариу ирлээ");
+        }
+        const uploadData = JSON.parse(text);
         logoUrl = uploadData.url;
       }
 
@@ -178,7 +203,11 @@ export default function EmployerProfile() {
         throw new Error("Failed to update company profile");
       }
 
-      const updatedCompany = await response.json();
+      const textUpdatedCompany = await response.text();
+      if (!textUpdatedCompany) {
+        throw new Error("Хоосон хариу ирлээ");
+      }
+      const updatedCompany = JSON.parse(textUpdatedCompany);
       setCompany(updatedCompany);
       setIsEditing(false);
       setLogoFile(null);
@@ -272,7 +301,11 @@ export default function EmployerProfile() {
         body: JSON.stringify(aboutEdit),
       });
       if (!response.ok) throw new Error("Failed to update company info");
-      const updated = await response.json();
+      const textUpdated = await response.text();
+      if (!textUpdated) {
+        throw new Error("Хоосон хариу ирлээ");
+      }
+      const updated = JSON.parse(textUpdated);
       setCompany(updated);
       setIsEditingAbout(false);
     } catch (e) {
@@ -303,16 +336,29 @@ export default function EmployerProfile() {
         body: formData,
       });
       if (!uploadRes.ok) throw new Error("Upload failed");
-      const uploadData = await uploadRes.json();
+      const text = await uploadRes.text();
+      if (!text) {
+        throw new Error("Хоосон хариу ирлээ");
+      }
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("JSON parse хийхэд алдаа гарлаа");
+      }
 
       // Update company coverImageUrl
       const updateRes = await fetch("/api/employer/company/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coverImageUrl: uploadData.url }),
+        body: JSON.stringify({ coverImageUrl: data.url }),
       });
       if (!updateRes.ok) throw new Error("Update failed");
-      const updated = await updateRes.json();
+      const textUpdated = await updateRes.text();
+      if (!textUpdated) {
+        throw new Error("Хоосон хариу ирлээ");
+      }
+      const updated = JSON.parse(textUpdated);
       setCompany(updated);
       setCoverFile(null);
       setCoverPreview(null);
@@ -322,6 +368,10 @@ export default function EmployerProfile() {
     } finally {
       setIsUploadingCover(false);
     }
+  };
+
+  const handleEdit = (jobId: string) => {
+    router.push(`/employer/jobs/edit/${jobId}`);
   };
 
   if (loading) {
@@ -445,8 +495,8 @@ export default function EmployerProfile() {
           <div className="w-20 h-20 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden">
             <img
               src={company?.logoUrl || "/images/default-company-logo.svg"}
-              alt="Logo"
-              className="w-full h-full object-contain"
+              alt="logo"
+              className="w-10 h-10 rounded-full object-cover"
             />
           </div>
           <div>
@@ -642,32 +692,98 @@ export default function EmployerProfile() {
               {jobs.map((job) => (
                 <div
                   key={job.id}
-                  className="bg-white rounded-2xl shadow p-6 border border-gray-100 cursor-pointer hover:shadow-lg transition"
-                  onClick={() =>
-                    router.push(`/employer/applications/${job.id}`)
-                  }
+                  className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-3 relative"
                 >
-                  <div className="flex items-center gap-4 mb-2">
-                    <Image
-                      src="/icons/application.svg"
-                      alt="Application"
-                      width={40}
-                      height={40}
-                    />
-                    <div>
-                      <div className="text-lg font-bold text-[#0C213A]">
+                  {/* Edit/Delete buttons */}
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <button
+                      onClick={() => handleEdit(job.id)}
+                      className="p-2 rounded hover:bg-gray-100 transition"
+                      title="Засах"
+                    >
+                      <svg
+                        className="w-5 h-5 text-blue-500"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M15.232 5.232l3.536 3.536M9 13l6-6M3 17.25V21h3.75l11.06-11.06a2.121 2.121 0 00-3-3L3 17.25z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteJob(job.id)}
+                      className="p-2 rounded hover:bg-gray-100 transition"
+                      title="Устгах"
+                    >
+                      <svg
+                        className="w-5 h-5 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  {/* Title & badges */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xl font-bold text-[#0C213A]">
                         {job.title}
-                      </div>
-                      <div className="text-xs text-[#0C213A]/60">
-                        {applications.length} өргөдөл
-                      </div>
+                      </span>
+                      {job.type && (
+                        <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                          {job.type}
+                        </span>
+                      )}
+                      {job.salary && (
+                        <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">
+                          {job.salary}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400">
-                    Сүүлд ирсэн:{" "}
-                    {job.createdAt
-                      ? new Date(job.createdAt).toLocaleDateString()
-                      : "-"}
+                  {/* Company info */}
+                  <div className="flex items-center gap-3 mt-2">
+                    <img
+                      src={
+                        company?.logoUrl || "/images/default-company-logo.svg"
+                      }
+                      alt="logo"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <div className="font-semibold text-[#0C213A]">
+                        {company?.name}
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                          <circle cx="12" cy="11" r="3" />
+                        </svg>
+                        {job.location}
+                      </div>
+                    </div>
+                    {/* Bookmark icon (optional) */}
+                    <button className="ml-auto p-2 rounded hover:bg-gray-100">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M5 5v14l7-7 7 7V5a2 2 0 00-2-2H7a2 2 0 00-2 2z" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               ))}
