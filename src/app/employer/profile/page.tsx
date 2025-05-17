@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Disclosure } from "@headlessui/react";
+import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 interface Company {
   id: string;
@@ -13,6 +15,7 @@ interface Company {
   location: string;
   website: string;
   logoUrl?: string;
+  coverImageUrl?: string;
 }
 
 interface Job {
@@ -37,6 +40,19 @@ export default function EmployerProfile() {
   const [editedCompany, setEditedCompany] = useState<Company | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("jobs");
+  const [applications, setApplications] = useState<any[]>([]);
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
+  const [aboutEdit, setAboutEdit] = useState({
+    name: company?.name || "",
+    location: company?.location || "",
+    website: company?.website || "",
+    description: company?.description || "",
+  });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [newApplicationsCount, setNewApplicationsCount] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -56,6 +72,46 @@ export default function EmployerProfile() {
       setEditedCompany(company);
     }
   }, [company]);
+
+  useEffect(() => {
+    if (activeTab === "anketuud") {
+      const fetchApplications = async () => {
+        try {
+          const res = await fetch("/api/employer/applications");
+          const data = await res.json();
+          setApplications(data);
+        } catch (e) {
+          setApplications([]);
+        }
+      };
+      fetchApplications();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    setAboutEdit({
+      name: company?.name || "",
+      location: company?.location || "",
+      website: company?.website || "",
+      description: company?.description || "",
+    });
+  }, [company]);
+
+  useEffect(() => {
+    // Fetch new applications count
+    const fetchNewCount = async () => {
+      try {
+        const res = await fetch("/api/employer/applications/new-count");
+        if (res.ok) {
+          const data = await res.json();
+          setNewApplicationsCount(data.count || 0);
+        }
+      } catch (e) {
+        setNewApplicationsCount(0);
+      }
+    };
+    fetchNewCount();
+  }, []);
 
   const fetchCompanyAndJobs = async () => {
     try {
@@ -90,36 +146,36 @@ export default function EmployerProfile() {
 
       if (logoFile) {
         const formData = new FormData();
-        formData.append('file', logoFile);
-        const uploadRes = await fetch('/api/upload/company-logo', {
-          method: 'POST',
+        formData.append("file", logoFile);
+        const uploadRes = await fetch("/api/upload/company-logo", {
+          method: "POST",
           body: formData,
         });
-        
+
         if (!uploadRes.ok) {
-          throw new Error('Failed to upload logo');
+          throw new Error("Failed to upload logo");
         }
-        
+
         const uploadData = await uploadRes.json();
         logoUrl = uploadData.url;
       }
 
-      const response = await fetch('/api/employer/company/update', {
-        method: 'PUT',
+      const response = await fetch("/api/employer/company/update", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           name: editedCompany?.name,
           location: editedCompany?.location,
           logoUrl: logoUrl,
           description: editedCompany?.description,
-          website: editedCompany?.website
+          website: editedCompany?.website,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update company profile');
+        throw new Error("Failed to update company profile");
       }
 
       const updatedCompany = await response.json();
@@ -127,12 +183,12 @@ export default function EmployerProfile() {
       setIsEditing(false);
       setLogoFile(null);
       setLogoPreview(null);
-      
+
       // Show success message
-      alert('Профайл амжилттай шинэчлэгдлээ');
+      alert("Профайл амжилттай шинэчлэгдлээ");
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Профайл шинэчлэхэд алдаа гарлаа. Дараа дахин оролдоно уу.');
+      console.error("Error updating profile:", error);
+      alert("Профайл шинэчлэхэд алдаа гарлаа. Дараа дахин оролдоно уу.");
     }
   };
 
@@ -154,6 +210,120 @@ export default function EmployerProfile() {
     }
   };
 
+  // Helper functions for status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800";
+      case "ACCEPTED":
+        return "bg-green-100 text-green-800";
+      case "REJECTED":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "Хүлээгдэж буй";
+      case "ACCEPTED":
+        return "Зөвшөөрөгдсөн";
+      case "REJECTED":
+        return "Татгалзсан";
+      default:
+        return status;
+    }
+  };
+
+  const handleStatusChange = async (
+    applicationId: string,
+    newStatus: string
+  ) => {
+    try {
+      const response = await fetch(
+        `/api/employer/applications/${applicationId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Статус шинэчлэхэд алдаа гарлаа");
+      }
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationId ? { ...app, status: newStatus } : app
+        )
+      );
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleAboutSave = async () => {
+    try {
+      const response = await fetch("/api/employer/company/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(aboutEdit),
+      });
+      if (!response.ok) throw new Error("Failed to update company info");
+      const updated = await response.json();
+      setCompany(updated);
+      setIsEditingAbout(false);
+    } catch (e) {
+      alert("Шинэчлэхэд алдаа гарлаа");
+    }
+  };
+
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCoverUpload = async () => {
+    if (!coverFile) return;
+    setIsUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", coverFile);
+      const uploadRes = await fetch("/api/upload/company-cover", {
+        method: "POST",
+        body: formData,
+      });
+      if (!uploadRes.ok) throw new Error("Upload failed");
+      const uploadData = await uploadRes.json();
+
+      // Update company coverImageUrl
+      const updateRes = await fetch("/api/employer/company/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coverImageUrl: uploadData.url }),
+      });
+      if (!updateRes.ok) throw new Error("Update failed");
+      const updated = await updateRes.json();
+      setCompany(updated);
+      setCoverFile(null);
+      setCoverPreview(null);
+      alert("Cover зураг амжилттай шинэчлэгдлээ");
+    } catch (e) {
+      alert("Cover зураг шинэчлэхэд алдаа гарлаа");
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -163,217 +333,347 @@ export default function EmployerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-30 px-0 md:px-32 text-[#0C213A] font-poppins">
-      {/* Header хэсэг */}
-      <div className="bg-white shadow-sm rounded-b-xl px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between mx-auto">
-        <div className="flex items-center gap-4">
-          <div className="relative group">
-            <div className="w-16 h-16 relative rounded-md bg-gray-100 overflow-hidden">
-              {logoPreview || company?.logoUrl ? (
-                <Image
-                  src={logoPreview || company?.logoUrl || ''}
-                  alt={`${company?.name} logo`}
-                  fill
-                  className="object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "/images/default-company-logo.svg";
-                  }}
+    <div className="min-h-screen mt-16    bg-white md:px-32 text-[#0C213A] font-poppins">
+      {/* Cover Image/Header */}
+      <div className="relative w-full h-48 md:h-64 group">
+        <img
+          src={
+            coverPreview ||
+            company?.coverImageUrl ||
+            "/images/default-cover.jpg"
+          }
+          alt="Company cover"
+          className="w-full h-full object-cover object-center transition-all duration-300"
+        />
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-end p-4">
+          <div className="relative">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleCoverChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            />
+            <div className="bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
-              ) : (
-                <Image
-                  src="/images/default-company-logo.svg"
-                  alt="Default company logo"
-                  fill
-                  className="object-contain"
-                />
-              )}
+              </svg>
+              Зураг сонгох
             </div>
-            {isEditing && (
-              <label className="absolute inset-0 bg-black bg-opacity-50 rounded-md flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoChange}
-                />
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="white" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                </svg>
-              </label>
-            )}
-          </div>
-          <div>
-            {isEditing ? (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={editedCompany?.name || ''}
-                  onChange={(e) => setEditedCompany(prev => prev ? {...prev, name: e.target.value} : null)}
-                  className="text-2xl font-bold text-[#0C213A] bg-gray-50 rounded-md px-3 py-1 w-full"
-                  placeholder="Компанийн нэр"
-                />
-                <input
-                  type="text"
-                  value={editedCompany?.location || ''}
-                  onChange={(e) => setEditedCompany(prev => prev ? {...prev, location: e.target.value} : null)}
-                  className="text-slate-600 text-sm bg-gray-50 rounded-md px-3 py-1 w-full"
-                  placeholder="Байршил"
-                />
-              </div>
-            ) : (
-              <>
-                <div className="text-2xl font-bold text-[#0C213A]">{company?.name || 'Таны компанийн нэр'}</div>
-                <div className="flex flex-wrap gap-4 text-slate-600 text-sm mt-1 items-center">
-                  <span className="flex items-center gap-2">
-                    <Image src="/icons/mail.svg" alt="email icon" width={20} height={20} />
-                    {session?.user?.email || 'info@company.mn'}
-                  </span>
-                  <span>|</span>
-                  <span className="flex items-center gap-2">
-                    <Image src="/icons/phone.svg" alt="phone icon" width={20} height={20} />
-                    90099810
-                  </span>
-                  <span>|</span>
-                  <span className="flex items-center gap-2">
-                    <Image src="/icons/location2.svg" alt="location icon" width={20} height={20} />
-                    {company?.location || 'Улаанбаатар, Монгол'}
-                  </span>
-                </div>
-              </>
-            )}
           </div>
         </div>
-        <div className="mt-4 md:mt-0 flex gap-3">
-          {isEditing ? (
-            <>
-              <button
-                onClick={handleSaveProfile}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition"
+        {coverFile && (
+          <div className="absolute bottom-4 right-4 flex gap-2">
+            <button
+              onClick={handleCoverUpload}
+              disabled={isUploadingCover}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUploadingCover ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Хадгалж байна...
+                </>
+              ) : (
+                <>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Хадгалах
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setCoverFile(null);
+                setCoverPreview(null);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Хадгалах
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditedCompany(company);
-                  setLogoFile(null);
-                  setLogoPreview(null);
-                }}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-6 py-2 rounded-lg shadow transition"
-              >
-                Цуцлах
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-6 py-2 rounded-lg shadow transition"
-              >
-                Профайл засах
-              </button>
-              <Link
-                href="/employer/post-job"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition"
-              >
-                Ажлын байр нийтлэх
-              </Link>
-            </>
-          )}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              Цуцлах
+            </button>
+          </div>
+        )}
+        <div className="absolute left-0 bottom-0 flex items-end gap-8 px-8 pb-8 w-full bg-gradient-to-t from-black/60 to-transparent">
+          <div className="w-20 h-20 bg-white rounded-xl shadow-lg flex items-center justify-center overflow-hidden">
+            <img
+              src={company?.logoUrl || "/images/default-company-logo.svg"}
+              alt="Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white">{company?.name}</h1>
+            <div className="text-base text-white/80">
+              Ажлын байр: {jobs.length}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Posted Jobs Section */}
-      <main className="mx-auto py-15">
-        <h2 className="text-2xl font-bold mb-8 text-[#0C213A] flex items-center gap-2">
-          <Image src="/icons/resume2.svg" alt="resume icon" width={100} height={100} />
-          Нийтэлсэн ажлын байрууд
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jobs.length === 0 ? (
-            <div className="col-span-full text-center text-gray-500">Одоогоор ажлын байр нийтлээгүй байна.</div>
-          ) : (
-            jobs.map((job) => (
-              <div
-                key={job.id}
-                className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(12,33,58,0.08)] p-5 flex flex-col gap-2 group relative transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(12,33,58,0.12)]"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 relative rounded bg-gray-100 overflow-hidden">
-                    {company?.logoUrl ? (
-                      <Image
-                        src={company.logoUrl}
-                        alt={`${company.name} logo`}
-                        fill
-                        className="object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/images/default-company-logo.svg";
-                        }}
-                      />
-                    ) : (
-                      <Image
-                        src="/images/default-company-logo.svg"
-                        alt="Default company logo"
-                        fill
-                        className="object-contain"
-                      />
-                    )}
+      {/* Tab Navigation */}
+      <div className="w-full bg-white border-b border-[#0C213A]/10">
+        <nav className="flex justify-start gap-0">
+          <button
+            className={`px-6 py-3 text-base font-medium rounded-none border-b-2 transition-all duration-200 cursor-pointer
+              ${
+                activeTab === "about"
+                  ? "border-[#0C213A] text-[#0C213A]"
+                  : "border-transparent text-[#0C213A]/60 hover:text-[#0C213A] hover:bg-[#0C213A]/5"
+              }
+            `}
+            onClick={() => setActiveTab("about")}
+          >
+            Тухай
+          </button>
+          <button
+            className={`px-6 py-3 text-base font-medium rounded-none border-b-2 transition-all duration-200 cursor-pointer
+              ${
+                activeTab === "jobs"
+                  ? "border-[#0C213A] text-[#0C213A]"
+                  : "border-transparent text-[#0C213A]/60 hover:text-[#0C213A] hover:bg-[#0C213A]/5"
+              }
+            `}
+            onClick={() => setActiveTab("jobs")}
+          >
+            Нээлттэй ажлын байр
+          </button>
+        </nav>
+      </div>
+
+      {/* Posted Jobs Section - энгийн жагсаалт хэлбэрээр үлдээнэ */}
+      <main className="mx-auto py-10 px-2 md:px-0">
+        {activeTab === "about" && (
+          <div className="w-full bg-white rounded-none shadow-none p-0 mb-8 border-0">
+            <div className="w-full px-0 md:px-16 py-12">
+              <h2 className="text-2xl font-bold mb-4 text-[#0C213A]">
+                Компанийн мэдээлэл
+              </h2>
+              {isEditingAbout ? (
+                <>
+                  <div className="mb-4">
+                    <span className="block text-gray-500 font-semibold mb-1">
+                      Компанийн нэр:
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full border rounded px-3 py-2 text-lg text-[#0C213A]"
+                      value={aboutEdit.name}
+                      onChange={(e) =>
+                        setAboutEdit((a) => ({ ...a, name: e.target.value }))
+                      }
+                    />
                   </div>
-                  <div className="text-base font-semibold text-[#0C213A]">{company?.name}</div>
-                  <span className={`ml-auto px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1
-                    ${job.type === 'FULL_TIME' ? 'bg-green-50 text-green-700' : ''}
-                    ${job.type === 'PART_TIME' ? 'bg-yellow-50 text-yellow-700' : ''}
-                    ${job.type === 'CONTRACT' ? 'bg-blue-50 text-blue-700' : ''}
-                    ${job.type === 'INTERNSHIP' ? 'bg-purple-50 text-purple-700' : ''}
-                  `}>
-                    <svg className={`w-4 h-4
-                      ${job.type === 'FULL_TIME' ? 'text-green-600' : ''}
-                      ${job.type === 'PART_TIME' ? 'text-yellow-500' : ''}
-                      ${job.type === 'CONTRACT' ? 'text-blue-500' : ''}
-                      ${job.type === 'INTERNSHIP' ? 'text-purple-500' : ''}
-                    `} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-                    {job.type === 'FULL_TIME' && 'БҮТЭН ЦАГ'}
-                    {job.type === 'PART_TIME' && 'ЦАГИЙН'}
-                    {job.type === 'CONTRACT' && 'ГЭРЭЭТ'}
-                    {job.type === 'INTERNSHIP' && 'ДАДЛАГА'}
-                  </span>
-                </div>
-                <div className="text-lg font-bold text-[#0C213A] mb-1">{job.title}</div>
-                <div className="flex justify-between items-center gap-4 mt-1 mb-2">
-                  <div className="flex items-center gap-2 text-gray-500 text-sm">
-                    <Image src="/icons/location2.svg" alt="location icon" width={20} height={20} />
-                    <span>{job.location}</span>
+                  <div className="mb-4">
+                    <span className="block text-gray-500 font-semibold mb-1">
+                      Байршил:
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full border rounded px-3 py-2 text-lg text-[#0C213A]"
+                      value={aboutEdit.location}
+                      onChange={(e) =>
+                        setAboutEdit((a) => ({
+                          ...a,
+                          location: e.target.value,
+                        }))
+                      }
+                    />
                   </div>
-                  <div className="flex items-center gap-1 text-base font-thin text-[#0C213A]">
-                    {job.salary ? <><Image src="/icons/wallet.svg" alt="wallet icon" width={20} height={20} className="inline-block" /> <span className="font-thin" style={{color:'#0C213A'}}>{job.salary}</span></> : 'Цалин тохиролцоно'}
+                  <div className="mb-4">
+                    <span className="block text-gray-500 font-semibold mb-1">
+                      Вэбсайт:
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full border rounded px-3 py-2 text-lg text-blue-600"
+                      value={aboutEdit.website}
+                      onChange={(e) =>
+                        setAboutEdit((a) => ({ ...a, website: e.target.value }))
+                      }
+                    />
                   </div>
-                </div>
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <Link
-                    href={`/employer/jobs/${job.id}/edit`}
-                    className="p-2 rounded-full bg-gray-100 hover:bg-blue-100 text-gray-600 hover:text-blue-600 transition"
-                    title="Засах"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.1 2.1 0 1 1 2.97 2.97L7.5 19.789l-4 1 1-4 13.362-13.302z" />
-                    </svg>
-                  </Link>
+                  <div className="mb-4">
+                    <span className="block text-gray-500 font-semibold mb-1">
+                      Тайлбар:
+                    </span>
+                    <textarea
+                      className="w-full border rounded px-3 py-2 text-base text-gray-700"
+                      rows={4}
+                      value={aboutEdit.description}
+                      onChange={(e) =>
+                        setAboutEdit((a) => ({
+                          ...a,
+                          description: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={handleAboutSave}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition"
+                    >
+                      Хадгалах
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingAbout(false);
+                        setAboutEdit({
+                          name: company?.name || "",
+                          location: company?.location || "",
+                          website: company?.website || "",
+                          description: company?.description || "",
+                        });
+                      }}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-6 py-2 rounded-lg shadow transition"
+                    >
+                      Болих
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <span className="block text-gray-500 font-semibold mb-1">
+                      Компанийн нэр:
+                    </span>
+                    <span className="text-lg text-[#0C213A]">
+                      {company?.name}
+                    </span>
+                  </div>
+                  <div className="mb-4">
+                    <span className="block text-gray-500 font-semibold mb-1">
+                      Байршил:
+                    </span>
+                    <span className="text-lg text-[#0C213A]">
+                      {company?.location}
+                    </span>
+                  </div>
+                  {company?.website && (
+                    <div className="mb-4">
+                      <span className="block text-gray-500 font-semibold mb-1">
+                        Вэбсайт:
+                      </span>
+                      <a
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {company.website}
+                      </a>
+                    </div>
+                  )}
+                  {company?.description && (
+                    <div className="mb-4">
+                      <span className="block text-gray-500 font-semibold mb-1">
+                        Тайлбар:
+                      </span>
+                      <p className="text-base text-gray-700 whitespace-pre-line">
+                        {company.description}
+                      </p>
+                    </div>
+                  )}
                   <button
-                    onClick={() => handleDeleteJob(job.id)}
-                    className="p-2 rounded-full bg-gray-100 hover:bg-red-100 text-gray-600 hover:text-red-600 transition"
-                    title="Устгах"
+                    onClick={() => setIsEditingAbout(true)}
+                    className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-6 py-2 rounded-lg shadow transition mt-2"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
+                    Засах
                   </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+        {activeTab === "jobs" && (
+          <>
+            <h2 className="text-xl font-bold mb-4 text-[#0C213A]">
+              Нээлттэй ажлын байрууд
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {jobs.map((job) => (
+                <div
+                  key={job.id}
+                  className="bg-white rounded-2xl shadow p-6 border border-gray-100 cursor-pointer hover:shadow-lg transition"
+                  onClick={() =>
+                    router.push(`/employer/applications/${job.id}`)
+                  }
+                >
+                  <div className="flex items-center gap-4 mb-2">
+                    <Image
+                      src="/icons/application.svg"
+                      alt="Application"
+                      width={40}
+                      height={40}
+                    />
+                    <div>
+                      <div className="text-lg font-bold text-[#0C213A]">
+                        {job.title}
+                      </div>
+                      <div className="text-xs text-[#0C213A]/60">
+                        {applications.length} өргөдөл
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Сүүлд ирсэн:{" "}
+                    {job.createdAt
+                      ? new Date(job.createdAt).toLocaleDateString()
+                      : "-"}
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))}
+            </div>
+          </>
+        )}
       </main>
     </div>
   );
