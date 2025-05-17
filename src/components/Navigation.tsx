@@ -106,12 +106,12 @@ export const Header = () => {
   const isEmployer = session?.user?.role === "EMPLOYER";
 
   return (
-    <header className="flex flex-col justify-center px-0 md:px-32 py-3 w-full bg-white min-h-[70px] shadow-[0_2px_8px_rgba(12,33,58,0.10)] max-md:px-5 max-md:max-w-full fixed top-0 z-50 text-lg">
+    <header className="flex flex-col justify-center px-0 md:px-32 py-4 w-full bg-white min-h-[70px] shadow-[0_2px_8px_rgba(12,33,58,0.10)] max-md:px-5 max-md:max-w-full fixed top-0 z-50 text-lg">
       <nav className="flex flex-wrap gap-10 justify-between items-center w-full max-w-[1600px] mx-auto max-md:max-w-full">
         <div className="flex flex-wrap gap-25 items-center min-w-60 text-[#0C213A] max-md:max-w-full">
           <Link
             href="/"
-            className="text-2xl font-bold tracking-tight text-[#0C213A]"
+            className="text-3xl font-bold tracking-tight text-[#0C213A]"
           >
             Talento
           </Link>
@@ -120,7 +120,7 @@ export const Header = () => {
               href="/"
               className="hover:text-[#0C213A]/80 cursor-pointer relative group text-[#0C213A]"
             >
-              <span className="group-hover:text-[#0C213A]/80 transition-colors">
+              <span className="group-hover:text-[#0C213A]/80 transition-colors font-poppins font-medium">
                 Нүүр
               </span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0C213A] transition-all duration-300 group-hover:w-full"></div>
@@ -129,7 +129,7 @@ export const Header = () => {
               href="/jobs"
               className="hover:text-[#0C213A]/80 cursor-pointer relative group text-[#0C213A]"
             >
-              <span className="group-hover:text-[#0C213A]/80 transition-colors">
+              <span className="group-hover:text-[#0C213A]/80 transition-colors font-poppins font-medium">
                 Ажлын байр
               </span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0C213A] transition-all duration-300 group-hover:w-full"></div>
@@ -138,7 +138,7 @@ export const Header = () => {
               href="/about"
               className="hover:text-[#0C213A]/80 cursor-pointer relative group text-[#0C213A]"
             >
-              <span className="group-hover:text-[#0C213A]/80 transition-colors">
+              <span className="group-hover:text-[#0C213A]/80 transition-colors font-poppins font-medium">
                 Таленто гэж юу вэ?
               </span>
               <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#0C213A] transition-all duration-300 group-hover:w-full"></div>

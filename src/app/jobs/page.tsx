@@ -19,21 +19,22 @@ interface Job {
   location: string;
   salary?: string;
   createdAt: string;
+  type: string;
 }
 
 export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   return (
-    <div className="min-h-screen mt-16 bg-gray-50">
-      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="min-h-screen pt-16 bg-white px-32">
+      <main className="py-12">
+        <div className="grid grid-cols-5 gap-8">
           {/* Left: Filters, Search, Job List */}
-          <div>
+          <div className="col-span-2">
             <JobsList onJobSelect={setSelectedJob} />
           </div>
           {/* Right: Job Details */}
-          <div className="hidden  lg:block">
+          <div className="hidden lg:block col-span-3">
             {selectedJob ? (
               <JobDetails job={selectedJob} />
             ) : (

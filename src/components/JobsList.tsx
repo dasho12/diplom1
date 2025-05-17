@@ -163,26 +163,32 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
         ))}
       </div>
       {/* Search and select in a row */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-2 mb-6">
         <input
           type="text"
           placeholder="Мэргэжил хайх..."
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-[2] px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-400 hover:border-slate-900 focus:border-slate-900 font-medium text-gray-900 text-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <select
-          className="w-48 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={selectedProvince}
-          onChange={(e) => setSelectedProvince(e.target.value)}
-        >
-          <option value="">Хот сонгох</option>
-          {MONGOLIA_PROVINCES.map((province) => (
-            <option key={province} value={province}>
-              {province}
-            </option>
-          ))}
-        </select>
+        <div className="relative w-60">
+          <select
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-slate-400 hover:border-slate-900 focus:border-slate-900 font-medium text-gray-500 text-sm appearance-none"
+            value={selectedProvince}
+            onChange={(e) => setSelectedProvince(e.target.value)}
+          >
+            <option value="">Хот сонгох</option>
+            {MONGOLIA_PROVINCES.map((province) => (
+              <option key={province} value={province}>
+                {province}
+              </option>
+            ))}
+          </select>
+          {/* Custom dropdown icon */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+            <img src="/icons/sum.svg" alt="Dropdown" className="w-5 h-5 text-gray-400" />
+          </div>
+        </div>
         <button className="bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -201,84 +207,99 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
         </button>
       </div>
       {/* Job cards vertical list */}
-      <div className="h-[calc(100vh-24rem)] overflow-y-auto pr-4">
+      <div className="h-[calc(100vh-18rem)] overflow-y-auto pr-4 scrollbar-hide">
         {filteredJobs.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-600">Ажлын байр олдсонгүй.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {filteredJobs.map((job) => (
-              <div
-                key={job.id}
-                className={`bg-white shadow rounded-lg p-4 flex items-center gap-4 hover:shadow-md transition-shadow duration-200 cursor-pointer ${
-                  selectedJob?.id === job.id ? "ring-2 ring-blue-500" : ""
-                }`}
-                onClick={() => {
-                  setSelectedJob(job);
-                  onJobSelect(job);
-                }}
-              >
-                {/* Badge */}
-                <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
-                  {job.type === "FULL_TIME" && "БҮТЭН ЦАГ"}
-                  {job.type === "PART_TIME" && "ЦАГИЙН"}
-                  {job.type === "CONTRACT" && "ГЭРЭЭТ"}
-                  {job.type === "INTERNSHIP" && "ДАДЛАГА"}
-                </span>
-                {/* Company Logo */}
-                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4 overflow-hidden">
-                  {job.company.logoUrl ? (
-                    <img
-                      src={job.company.logoUrl}
-                      alt={`${job.company.name} logo`}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/images/default-company-logo.svg";
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src="/images/default-company-logo.svg"
-                      alt="Default company logo"
-                      className="w-10 h-10 object-contain"
-                    />
-                  )}
-                </div>
-                {/* Job info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900 truncate">
-                    {job.title}
-                  </h3>
-                  <p className="text-md text-gray-600 truncate">
-                    {job.company.name}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {job.location}
-                  </p>
-                  {job.salary && (
-                    <p className="text-sm text-gray-500 truncate">
-                      {job.salary}
-                    </p>
-                  )}
-                </div>
-                {/* Arrow icon */}
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {filteredJobs.map((job) => {
+              const isSelected = selectedJob?.id === job.id;
+              return (
+                <div
+                  key={job.id}
+                  className={`relative overflow-hidden bg-white rounded-xl shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
+                  onClick={() => {
+                    setSelectedJob(job);
+                    onJobSelect(job);
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </div>
-            ))}
+                  <div className="p-6">
+                    <div className="flex flex-col">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{job.title}</h3>
+                      <div className="flex flex-wrap gap-2 items-center mb-4">
+                        <span className="px-3 py-1 text-sm font-semibold text-[#0BA02C] bg-[#E7F6EA] rounded-full">
+                          {job.type === 'FULL_TIME' ? 'БҮТЭН ЦАГ' : job.type === 'PART_TIME' ? 'ХАГАС ЦАГ' : job.type === 'CONTRACT' ? 'ГЭРЭЭТ' : job.type === 'INTERNSHIP' ? 'ДАДЛАГА' : job.type}
+                        </span>
+                        <span className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-900">
+                          {job.salary || 'Тохиролцоно'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center pt-4 border-t border-gray-100">
+                      <div className="relative mr-4">
+                        <img
+                          src={job.company.logoUrl || '/images/default-company-logo.svg'}
+                          alt={job.company.name}
+                          className="w-12 h-12 object-contain rounded-lg"
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-gray-900">
+                          {job.company.name}
+                        </h4>
+                        <div className="flex items-center mt-1 text-sm text-gray-500">
+                          <svg
+                            className="w-4 h-4 mr-1 text-gray-800"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          {job.location}
+                        </div>
+                      </div>
+
+                      <button
+                        className="ml-4 p-2 rounded-full transition-colors duration-300 text-gray-400 hover:text-gray-600"
+                        aria-label="Bookmark job"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

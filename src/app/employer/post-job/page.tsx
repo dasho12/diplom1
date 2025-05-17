@@ -42,9 +42,6 @@ export default function PostJobPageWithNewDesign() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -91,24 +88,10 @@ export default function PostJobPageWithNewDesign() {
       if (formRef.current) {
         formRef.current.reset();
       }
-      setLogoUrl(null);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Тодорхойгүй алдаа гарлаа.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setIsUploadingLogo(true);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoUrl(reader.result as string);
-        setIsUploadingLogo(false);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -138,30 +121,7 @@ export default function PostJobPageWithNewDesign() {
                 {/* Logo Area */} 
                 <div 
                     className="w-[201px] h-[201px] border border-slate-300 rounded-lg flex flex-col items-center justify-center p-4 flex-shrink-0 cursor-pointer hover:bg-slate-50 transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
                 >
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                    />
-                    {logoUrl ? (
-                        <img 
-                            src={logoUrl} 
-                            alt="Company Logo" 
-                            className="w-full h-full object-contain"
-                            style={{ width: 'auto', height: 'auto' }}
-                        />
-                    ) : (
-                        <>
-                            <PhotoIcon className="w-12 h-12 text-slate-400 mb-2" />
-                            <p className={`text-xs ${labelBaseClass} font-light text-center`}>
-                                {isUploadingLogo ? "Лого хуулаж байна..." : "Лого"}
-                            </p>
-                        </>
-                    )}
                 </div>
                 {/* Input Fields Next to Logo */} 
                 <div className="flex-grow grid grid-cols-1 gap-y-4 content-start">

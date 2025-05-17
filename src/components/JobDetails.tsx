@@ -19,12 +19,15 @@ interface Job {
   company: {
     name: string;
     logoUrl?: string;
+    url?: string;
   };
   description: string;
   requirements: string;
   location: string;
   salary?: string;
   createdAt: string;
+  type: string;
+  contactPhone?: string;
 }
 
 interface JobDetailsProps {
@@ -105,8 +108,8 @@ export default function JobDetails({ job }: JobDetailsProps) {
 
   return (
     <div className="bg-white shadow rounded-lg p-8 min-h-[500px]">
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="flex items-center gap-6 mb-6">
+        <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
           {job.company.logoUrl ? (
             <img
               src={job.company.logoUrl}
@@ -121,44 +124,67 @@ export default function JobDetails({ job }: JobDetailsProps) {
             <img
               src="/images/default-company-logo.svg"
               alt="Default company logo"
-              className="w-14 h-14 object-contain"
+              className="w-16 h-16 object-contain"
             />
           )}
         </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">{job.title}</h2>
-          <p className="text-lg text-gray-600">{job.company.name}</p>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-2xl font-bold text-[#0C213A] mb-1">{job.title}</h2>
+          <a href={job.company.url || '#'} className="text-blue-600 hover:underline text-base font-medium block mb-1" target="_blank" rel="noopener noreferrer">{job.company.name}</a>
+          <div className="flex flex-wrap gap-8 text-sm text-[#0C213A] mb-2">
+            <div>
+              <span className="font-semibold">Үнэлгээ</span> <span className="ml-1">{job.salary || 'Тохиролцоно'}</span>
+            </div>
+            <div>
+              <span className="font-semibold">Ажлын цаг</span> <span className="ml-1">{job.type === 'FULL_TIME' ? 'БҮТЭН ЦАГ' : job.type === 'PART_TIME' ? 'ХАГАС ЦАГ' : job.type === 'CONTRACT' ? 'ГЭРЭЭТ' : job.type === 'INTERNSHIP' ? 'ДАДЛАГА' : job.type}</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Байршил</h3>
-          <p className="text-gray-600">{job.location}</p>
+          <h3 className="text-lg font-semibold text-[#0C213A] mb-2">Байршил</h3>
+          <p className="text-[#0C213A]">{job.location}</p>
         </div>
 
-        {job.salary && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Цалин</h3>
-            <p className="text-gray-600">{job.salary}</p>
-          </div>
-        )}
-
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Тайлбар</h3>
-          <p className="text-gray-600 whitespace-pre-wrap">{job.description}</p>
+          <h3 className="text-lg font-semibold text-[#0C213A] mb-2">Тайлбар</h3>
+          <p className="text-[#0C213A] whitespace-pre-wrap">{job.description}</p>
         </div>
 
         {job.requirements && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-[#0C213A] mb-2">
               Шаардлага
             </h3>
-            <p className="text-gray-600 whitespace-pre-wrap">
+            <p className="text-[#0C213A] whitespace-pre-wrap">
               {job.requirements}
             </p>
           </div>
         )}
+
+        <div className="flex flex-col md:flex-row gap-8 mt-6">
+          <div className="flex-1">
+            <div className="font-semibold text-[#0C213A] mb-1">Утас</div>
+            <div className="text-[#0C213A] text-sm">{job.contactPhone || "Утас оруулаагүй"}</div>
+          </div>
+          <div className="flex-1">
+            <div className="font-semibold text-[#0C213A] mb-1">Байгууллагын линк</div>
+            {job.company.url ? (
+              <a
+                href={job.company.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline text-sm"
+              >
+                {job.company.url}
+              </a>
+            ) : (
+              <span className="text-[#0C213A] text-sm">Линк оруулаагүй</span>
+            )}
+          </div>
+        </div>
 
         <div className="pt-6">
           {session?.user ? (
