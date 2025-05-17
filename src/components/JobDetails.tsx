@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import ApplyJobModal from "./ApplyJobModal";
+import Link from "next/link";
 
 interface CV {
   id: string;
@@ -20,6 +21,8 @@ interface Job {
     name: string;
     logoUrl?: string;
     url?: string;
+    description?: string;
+    id: string;
   };
   description: string;
   requirements: string;
@@ -28,6 +31,7 @@ interface Job {
   createdAt: string;
   type: string;
   contactPhone?: string;
+  skills?: string;
 }
 
 interface JobDetailsProps {
@@ -130,7 +134,12 @@ export default function JobDetails({ job }: JobDetailsProps) {
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold text-[#0C213A] mb-1">{job.title}</h2>
-          <a href={job.company.url || '#'} className="text-blue-600 hover:underline text-base font-medium block mb-1" target="_blank" rel="noopener noreferrer">{job.company.name}</a>
+          <Link 
+            href={`/company/${job.company.id}`} 
+            className="text-blue-600 hover:underline text-base font-medium block mb-1"
+          >
+            {job.company.name}
+          </Link>
           <div className="flex flex-wrap gap-8 text-sm text-[#0C213A] mb-2">
             <div>
               <span className="font-semibold">Үнэлгээ</span> <span className="ml-1">{job.salary || 'Тохиролцоно'}</span>
@@ -148,6 +157,33 @@ export default function JobDetails({ job }: JobDetailsProps) {
           <p className="text-[#0C213A]">{job.location}</p>
         </div>
 
+        {job.skills && (
+          <div>
+            <h3 className="text-lg font-semibold text-[#0C213A] mb-2">Шаардлагатай ур чадварууд</h3>
+            <div className="flex flex-wrap gap-2">
+              {Array.isArray(job.skills) ? (
+                job.skills.map((skill: string) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md text-sm"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : typeof job.skills === 'string' ? (
+                JSON.parse(job.skills).map((skill: string) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md text-sm"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : null}
+            </div>
+          </div>
+        )}
+
         <div>
           <h3 className="text-lg font-semibold text-[#0C213A] mb-2">Тайлбар</h3>
           <p className="text-[#0C213A] whitespace-pre-wrap">{job.description}</p>
@@ -160,6 +196,17 @@ export default function JobDetails({ job }: JobDetailsProps) {
             </h3>
             <p className="text-[#0C213A] whitespace-pre-wrap">
               {job.requirements}
+            </p>
+          </div>
+        )}
+
+        {job.company.description && (
+          <div>
+            <h3 className="text-lg font-semibold text-[#0C213A] mb-2">
+              Байгууллагын тухай
+            </h3>
+            <p className="text-[#0C213A] whitespace-pre-wrap">
+              {job.company.description}
             </p>
           </div>
         )}

@@ -8,6 +8,7 @@ import Image from "next/image";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 import ProfileImageUpload from "@/components/ProfileImageUpload";
 import ProfileCVUpload from "@/components/ProfileCVUpload";
+import CVList from "@/components/CVList";
 
 export default async function JobseekerProfilePage() {
   const session = await getServerSession(authOptions);
@@ -135,48 +136,7 @@ export default async function JobseekerProfilePage() {
 
         {/* Баруун багана: CV жагсаалт */}
         <div className="md:w-1/2 w-full">
-          <div className="flex flex-col gap-6 max-h-[40rem] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 rounded-2xl">
-            {user.cvs && user.cvs.length > 0 ? (
-              user.cvs.map((cv: any) => (
-                <div
-                  key={cv.id}
-                  className="bg-white rounded-2xl p-7 shadow-lg flex flex-col sm:flex-row justify-between items-center text-black border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition duration-200"
-                >
-                  <div>
-                    <div className="font-semibold text-base text-black">
-                      {cv.fileName}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1 text-black">
-                      Огноо: {new Date(cv.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                  {cv.fileUrl ? (
-                    <a
-                      href={cv.fileUrl}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 sm:mt-0 px-5 py-2 bg-[#0a1931] text-white rounded-lg font-semibold shadow hover:bg-[#185adb] transition text-black text-center"
-                    >
-                      Татах
-                    </a>
-                  ) : (
-                    <button
-                      className="mt-2 sm:mt-0 px-5 py-2 bg-gray-300 text-white rounded-lg font-semibold shadow cursor-not-allowed text-black"
-                      disabled
-                    >
-                      Татах
-                    </button>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="bg-white rounded-lg p-5 shadow text-center text-gray-500 text-black">
-                CV оруулаагүй байна.
-              </div>
-            )}
-          </div>
-          .{" "}
+          <CVList cvs={user.cvs} />
         </div>
       </div>
     </div>

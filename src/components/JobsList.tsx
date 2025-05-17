@@ -277,8 +277,16 @@ export default function JobsList({ onJobSelect }: JobsListProps) {
                       </div>
 
                       <button
-                        className="ml-4 p-2 rounded-full transition-colors duration-300 text-gray-400 hover:text-gray-600"
+                        className={`ml-4 p-2 rounded-full transition-colors duration-300 ${
+                          isSelected
+                            ? "bg-gradient-to-r from-gray-800 to-gray-900 text-white"
+                            : "text-gray-400 hover:text-gray-600"
+                        }`}
                         aria-label="Bookmark job"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add your save logic here
+                        }}
                       >
                         <svg
                           className="w-5 h-5"

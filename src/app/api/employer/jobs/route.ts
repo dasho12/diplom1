@@ -39,6 +39,7 @@ export async function GET() {
         type: true,
         status: true,
         createdAt: true,
+        skills: true,
       },
     });
 
@@ -88,6 +89,7 @@ export async function POST(req: Request) {
       contactPhone,
       workHours,
       type,
+      skills,
     } = body;
 
     // Validate required fields
@@ -130,6 +132,7 @@ export async function POST(req: Request) {
           contactPhone,
           workHours,
           type,
+          skills: JSON.stringify(skills || []),
         },
       });
 

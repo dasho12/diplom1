@@ -327,44 +327,61 @@ export default function EmployerProfile() {
 
   const handleCoverUpload = async () => {
     if (!coverFile) return;
-    setIsUploadingCover(true);
+
     try {
+      setIsUploadingCover(true);
+      setError(null);
+
       const formData = new FormData();
       formData.append("file", coverFile);
+
       const uploadRes = await fetch("/api/upload/company-cover", {
         method: "POST",
         body: formData,
       });
-      if (!uploadRes.ok) throw new Error("Upload failed");
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload cover image");
+      }
+
       const text = await uploadRes.text();
       if (!text) {
         throw new Error("Хоосон хариу ирлээ");
       }
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("JSON parse хийхэд алдаа гарлаа");
+      const uploadData = JSON.parse(text);
+
+      // Update company with new cover image URL
+      const response = await fetch("/api/employer/company/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: company?.name,
+          location: company?.location,
+          logoUrl: company?.logoUrl,
+          description: company?.description,
+          website: company?.website,
+          coverImageUrl: uploadData.url,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update company profile");
       }
 
-      // Update company coverImageUrl
-      const updateRes = await fetch("/api/employer/company/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coverImageUrl: data.url }),
-      });
-      if (!updateRes.ok) throw new Error("Update failed");
-      const textUpdated = await updateRes.text();
-      if (!textUpdated) {
+      const textUpdatedCompany = await response.text();
+      if (!textUpdatedCompany) {
         throw new Error("Хоосон хариу ирлээ");
       }
-      const updated = JSON.parse(textUpdated);
-      setCompany(updated);
+      const updatedCompany = JSON.parse(textUpdatedCompany);
+      setCompany(updatedCompany);
       setCoverFile(null);
       setCoverPreview(null);
-      alert("Cover зураг амжилттай шинэчлэгдлээ");
-    } catch (e) {
-      alert("Cover зураг шинэчлэхэд алдаа гарлаа");
+      setSuccessMessage("Cover image updated successfully");
+    } catch (error) {
+      console.error("Error uploading cover:", error);
+      setError("Failed to upload cover image. Please try again.");
     } finally {
       setIsUploadingCover(false);
     }
@@ -422,7 +439,7 @@ export default function EmployerProfile() {
           </div>
         </div>
         {coverFile && (
-          <div className="absolute bottom-4 right-4 flex gap-2">
+          <div className="absolute bottom-4 right-4 flex gap-2 z-20">
             <button
               onClick={handleCoverUpload}
               disabled={isUploadingCover}

@@ -24,6 +24,7 @@ import {
   UserCircleIcon, // Placeholder for User Icon in Nav
   ComputerDesktopIcon, // Placeholder for AI icon
 } from '@heroicons/react/24/outline';
+import { JobType } from "@prisma/client";
 
 // Helper component for Skill Tags
 const SkillTag = ({ children }: { children: React.ReactNode }) => (
@@ -37,12 +38,87 @@ const AiIconPlaceholder = () => <ComputerDesktopIcon className="w-6 h-6 text-sla
 const UserIconPlaceholder = () => <UserCircleIcon className="w-7 h-7 text-slate-700" />;
 const TalentoLogoNav = () => <ServerStackIcon className="w-7 h-7 text-slate-700" />;
 
+// Add predefined skills list
+const SKILLS_LIST = [
+  "JavaScript", "TypeScript", "React", "Node.js", "Python", "Java", "C#", "C++",
+  "PHP", "Ruby", "Swift", "Kotlin", "Go", "Rust", "SQL", "MongoDB", "PostgreSQL",
+  "MySQL", "AWS", "Azure", "GCP", "Docker", "Kubernetes", "Linux", "Git",
+  "HTML", "CSS", "SASS", "Redux", "Vue.js", "Angular", "Next.js", "GraphQL",
+  "REST API", "Microservices", "DevOps", "CI/CD", "Testing", "Agile", "Scrum",
+  "UI/UX Design", "Figma", "Adobe XD", "Photoshop", "Illustrator", "Project Management",
+  "Technical Writing", "Documentation", "Communication", "Leadership", "Problem Solving"
+];
+
 export default function PostJobPageWithNewDesign() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    location: "",
+    salary: "",
+    requirements: "",
+    otherInfo: "",
+    companyUrl: "",
+    contactPhone: "",
+    workHours: "",
+    type: "FULL_TIME" as JobType,
+    skills: [] as string[],
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentSkill, setCurrentSkill] = useState("");
+
+  const filteredSkills = SKILLS_LIST.filter(skill =>
+    skill.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSkillSelect = (skill: string) => {
+    if (!selectedSkills.includes(skill)) {
+      setSelectedSkills([...selectedSkills, skill]);
+    }
+  };
+
+  const handleSkillRemove = (skill: string) => {
+    setSelectedSkills(selectedSkills.filter(s => s !== skill));
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddSkill = () => {
+    if (currentSkill.trim() && !formData.skills.includes(currentSkill.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, currentSkill.trim()]
+      }));
+      setCurrentSkill("");
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
+    }));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSkill();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,19 +126,20 @@ export default function PostJobPageWithNewDesign() {
     setError("");
     setSuccessMessage("");
 
-    const formData = new FormData(e.currentTarget);
-    const requirements = formData.get("requirements") as string;
+    const formDataObj = new FormData(e.currentTarget);
+    const requirements = formDataObj.get("requirements") as string;
     const data = {
-      title: formData.get("title") as string,
+      title: formDataObj.get("title") as string,
       description: requirements,
-      location: formData.get("location") as string,
+      location: formDataObj.get("location") as string,
       requirements: requirements,
-      salary: formData.get("salary") as string,
-      workHours: formData.get("workHours") as string,
-      type: formData.get("type") as string,
-      companyUrl: formData.get("companyUrl") as string,
-      contactPhone: formData.get("contactPhone") as string,
-      otherInfo: formData.get("otherInfo") as string,
+      salary: formDataObj.get("salary") as string,
+      workHours: formDataObj.get("workHours") as string,
+      type: formDataObj.get("type") as string,
+      companyUrl: formDataObj.get("companyUrl") as string,
+      contactPhone: formDataObj.get("contactPhone") as string,
+      otherInfo: formDataObj.get("otherInfo") as string,
+      skills: formData.skills,
     };
 
     // Validate required fields
@@ -223,6 +300,47 @@ export default function PostJobPageWithNewDesign() {
               className={`${inputBaseClass} ${inputPadding}`}
               placeholder="Бусад (Нэмэлт мэдээлэл): Ажлын байрны онцлог, компанийн соёл, ажиллах орчин, нөхцөл, хангамж, боломжууд болон бусад нэмэлт мэдээллийг энд оруулна уу..."
             />
+          </div>
+
+          {/* Skills Input */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Шаардлагатай ур чадвар
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={currentSkill}
+                onChange={(e) => setCurrentSkill(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ур чадвар нэмэх"
+                className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddSkill}
+                className="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
+                Нэмэх
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.skills.map((skill) => (
+                <span
+                  key={skill}
+                  className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700"
+                >
+                  {skill}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSkill(skill)}
+                    className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-green-200"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
 
            {/* Submit Buttons - You might want to place these more prominently or differently */}

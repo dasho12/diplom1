@@ -12,6 +12,7 @@ interface JobMatch {
     title: string;
     company: {
       name: string;
+      logoUrl?: string;
     };
     location: string;
     salary?: string;
@@ -31,6 +32,7 @@ export default function Home() {
   const [jobMatches, setJobMatches] = useState<JobMatch[]>([]);
   const [noMatches, setNoMatches] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
   const handleAnalysisComplete = (
     analysisResult: string,
@@ -54,6 +56,29 @@ export default function Home() {
     setNoMatches(false);
   };
 
+  const handleDeleteCV = async (cvId: string) => {
+    if (!confirm('CV-гээ устгахдаа итгэлтэй байна уу?')) return;
+    
+    setDeleteLoading(cvId);
+    try {
+      const response = await fetch(`/api/user/cvs/${cvId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('CV устгахад алдаа гарлаа');
+      }
+
+      // Refresh the page to show updated CV list
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting CV:', error);
+      alert('CV устгахад алдаа гарлаа');
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
@@ -64,26 +89,54 @@ export default function Home() {
           <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8">
             CV-гээ байршуулж, AI-ийн тусламжтайгаар шууд шинжилгээгээ авна уу
           </p>
-          <Link
-            href="/jobs"
-            className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-[#0C213A] rounded-lg hover:bg-[#0C213A]/90 transition-colors"
-          >
-            Бүх ажлын байруудыг харах
-            <svg
-              className="w-5 h-5 ml-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="flex justify-center gap-4">
+            <Link
+              href="/jobs"
+              className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-[#0C213A] rounded-lg hover:bg-[#0C213A]/90 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Link>
+              Бүх ажлын байруудыг харах
+              <svg
+                className="w-5 h-5 ml-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+            <Link
+              href="/jobseeker/profile"
+              className="inline-flex items-center px-6 py-3 text-base font-medium text-[#0C213A] bg-white border border-[#0C213A] rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              CV-гээ удирдах
+              <svg
+                className="w-5 h-5 ml-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </Link>
+          </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-200">
@@ -178,13 +231,25 @@ export default function Home() {
                           <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 text-green-700 mr-2">
                             {Math.round(match.matchScore)}% ТОХИРОЛТ
                           </span>
-                          {/* Logo (placeholder) */}
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
-                            <img
-                              src="https://cdn.builder.io/api/v1/image/assets/04fcdb08a3cb484fba8d958382052e5c/23813725c8b2f39dd1d36d4e94e16d8ab78110aa?placeholderIfAbsent=true"
-                              alt="logo"
-                              className="w-10 h-10 object-contain"
-                            />
+                          {/* Logo */}
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4 overflow-hidden">
+                            {match.job.company.logoUrl ? (
+                              <img
+                                src={match.job.company.logoUrl}
+                                alt={`${match.job.company.name} logo`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = "/images/default-company-logo.svg";
+                                }}
+                              />
+                            ) : (
+                              <img
+                                src="/images/default-company-logo.svg"
+                                alt="Default company logo"
+                                className="w-full h-full object-contain"
+                              />
+                            )}
                           </div>
                           {/* Job info */}
                           <div className="flex-1 min-w-0">
